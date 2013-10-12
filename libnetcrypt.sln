@@ -1,0 +1,51 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libnetcrypt", "libnetcrypt\libnetcrypt.vcxproj", "{050EC508-164C-42AE-B893-FE8B816E921B}"
+	ProjectSection(ProjectDependencies) = postProject
+		{C8969885-901B-478C-8E7D-092F0E6A78F3} = {C8969885-901B-478C-8E7D-092F0E6A78F3}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libtommath", "libtommath\libtommath.vcxproj", "{C8969885-901B-478C-8E7D-092F0E6A78F3}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "testprog", "testprog\testprog.vcxproj", "{4EA09213-AB2D-44CB-A028-26EF82BEEEBB}"
+	ProjectSection(ProjectDependencies) = postProject
+		{050EC508-164C-42AE-B893-FE8B816E921B} = {050EC508-164C-42AE-B893-FE8B816E921B}
+		{C8969885-901B-478C-8E7D-092F0E6A78F3} = {C8969885-901B-478C-8E7D-092F0E6A78F3}
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Debug|x64 = Debug|x64
+		Release|Win32 = Release|Win32
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{050EC508-164C-42AE-B893-FE8B816E921B}.Debug|Win32.ActiveCfg = Debug|Win32
+		{050EC508-164C-42AE-B893-FE8B816E921B}.Debug|Win32.Build.0 = Debug|Win32
+		{050EC508-164C-42AE-B893-FE8B816E921B}.Debug|x64.ActiveCfg = Debug|x64
+		{050EC508-164C-42AE-B893-FE8B816E921B}.Debug|x64.Build.0 = Debug|x64
+		{050EC508-164C-42AE-B893-FE8B816E921B}.Release|Win32.ActiveCfg = Release|Win32
+		{050EC508-164C-42AE-B893-FE8B816E921B}.Release|Win32.Build.0 = Release|Win32
+		{050EC508-164C-42AE-B893-FE8B816E921B}.Release|x64.ActiveCfg = Release|x64
+		{050EC508-164C-42AE-B893-FE8B816E921B}.Release|x64.Build.0 = Release|x64
+		{C8969885-901B-478C-8E7D-092F0E6A78F3}.Debug|Win32.ActiveCfg = Debug|Win32
+		{C8969885-901B-478C-8E7D-092F0E6A78F3}.Debug|Win32.Build.0 = Debug|Win32
+		{C8969885-901B-478C-8E7D-092F0E6A78F3}.Debug|x64.ActiveCfg = Debug|x64
+		{C8969885-901B-478C-8E7D-092F0E6A78F3}.Debug|x64.Build.0 = Debug|x64
+		{C8969885-901B-478C-8E7D-092F0E6A78F3}.Release|Win32.ActiveCfg = Release|Win32
+		{C8969885-901B-478C-8E7D-092F0E6A78F3}.Release|Win32.Build.0 = Release|Win32
+		{C8969885-901B-478C-8E7D-092F0E6A78F3}.Release|x64.ActiveCfg = Release|x64
+		{C8969885-901B-478C-8E7D-092F0E6A78F3}.Release|x64.Build.0 = Release|x64
+		{4EA09213-AB2D-44CB-A028-26EF82BEEEBB}.Debug|Win32.ActiveCfg = Debug|Win32
+		{4EA09213-AB2D-44CB-A028-26EF82BEEEBB}.Debug|Win32.Build.0 = Debug|Win32
+		{4EA09213-AB2D-44CB-A028-26EF82BEEEBB}.Debug|x64.ActiveCfg = Debug|x64
+		{4EA09213-AB2D-44CB-A028-26EF82BEEEBB}.Release|Win32.ActiveCfg = Release|Win32
+		{4EA09213-AB2D-44CB-A028-26EF82BEEEBB}.Release|Win32.Build.0 = Release|Win32
+		{4EA09213-AB2D-44CB-A028-26EF82BEEEBB}.Release|x64.ActiveCfg = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
