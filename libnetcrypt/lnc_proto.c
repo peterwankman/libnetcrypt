@@ -21,8 +21,6 @@
  * 
  */
 
-#include <WinSock2.h>
-#include <Windows.h>
 #include <stdlib.h>
 
 #include "../libtommath/tommath.h"
@@ -258,20 +256,20 @@ int lnc_handshake_client(lnc_sock_t *socket, const lnc_key_t *key) {
 
 	if(mp_init_multi(&root, &modulus, &server_key, &public_key, &shared_key, NULL) != MP_OKAY)
 		return LNC_ERR_LTM;
-
+	
 	if((recvmp(s, &root) != LNC_OK) || (recvmp(s, &modulus) != LNC_OK) || (recvmp(s, &server_key) != LNC_OK)) {
 		mp_clear_multi(&root, &modulus, &public_key, &server_key, &shared_key, NULL);
 		send(s, (char*)&nack, sizeof(nack), 0);
 		return LNC_ERR_LTM;
 	}
 
-	/* See explanation above for client key = 1 */
 	if((mp_cmp_d(&server_key, 1) == MP_EQ) || (mp_cmp_d(&root, 1) == MP_EQ)) {
 		mp_clear_multi(&root, &modulus, &public_key, &server_key, &shared_key, NULL);
 		send(s, (char*)&nack, sizeof(nack), 0);
 		return LNC_ERR_WEAK;
 	}
 
+	/* See explanation above for client key = 1 */
 	if((mp_exptmod(&root, (mp_int*)&(key->secret_key), &modulus, &public_key) != MP_OKAY) ||
 	   (mp_exptmod(&server_key, (mp_int*)&(key->secret_key), &modulus, &shared_key) != MP_OKAY)) {
 		mp_clear_multi(&root, &modulus, &public_key, &server_key, &shared_key, NULL);

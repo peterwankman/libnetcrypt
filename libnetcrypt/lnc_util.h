@@ -41,7 +41,7 @@ typedef enum { type_boolean, type_integer, type_text } value_type_t;
 uint32_t lnc_conv_endian(uint32_t n);
 size_t lnc_mksalt(char **saltout, size_t *slen);
 uint8_t *lnc_hex2char(const char *in, size_t len);
-int lnc_salt_hash(const char *in, const size_t len, const char *salthex, char **hashout);
+int lnc_salt_hash(const char *in, const size_t len, const uint8_t *salthex, char **hashout);
 int lnc_fill_random(unsigned char *dst, int len, void *dat);
 void lnc_key_to_file(lnc_key_t *key, char *filename, int *status);
 lnc_key_t *lnc_key_from_file(char *filename, int *status);

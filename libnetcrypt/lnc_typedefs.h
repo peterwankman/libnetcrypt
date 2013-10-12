@@ -21,9 +21,10 @@
  * 
  */
 
-#include <WinSock2.h>
 #include <stdint.h>
 #include "../libtommath/tommath.h"
+
+#include "lnc.h"
 
 #ifndef LNC_TYPEDEFS_H_
 #define LNC_TYPEDEFS_H_

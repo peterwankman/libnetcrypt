@@ -110,7 +110,7 @@ static size_t newsize(const size_t insize) {
 	return size;
 }
 
-static uint8_t *preprocess(const char *in, const size_t insize, const size_t size) {
+static uint8_t *preprocess(const uint8_t *in, const size_t insize, const size_t size) {
 	uint8_t *out;
 	size_t i;
 
@@ -195,7 +195,7 @@ static lnc_hash_t digest(const uint8_t *in, const size_t size) {
 	return state;
 }
 
-lnc_hash_t lnc_sha256(const char *in, const size_t insize) {
+lnc_hash_t lnc_sha256(const uint8_t *in, const size_t insize) {
 	uint8_t *prep;
 	lnc_hash_t out;
 	size_t size = newsize(insize);

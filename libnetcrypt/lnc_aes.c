@@ -24,7 +24,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "..\shared\mem.h"
+#include "../shared/mem.h"
 #include "lnc_aes.h"
 #include "lnc_aes_tables.h"
 

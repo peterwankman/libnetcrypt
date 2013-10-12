@@ -34,7 +34,7 @@
 
 void server(u_short port, lnc_key_t *key) {
 	lnc_sock_t *listsock, *accsock;
-	uint32_t status, nclient = 0;
+	int status, nclient = 0;
 	uint8_t *rndart;
 
 	printf("Opening socket on port %d... ", port);
@@ -61,7 +61,7 @@ void server(u_short port, lnc_key_t *key) {
 
 		printf("Sending '%s'... ", TESTMSG);
 
-		if(lnc_send(accsock, TESTMSG, strlen(TESTMSG) + 1))
+		if(lnc_send(accsock, (uint8_t*)TESTMSG, strlen(TESTMSG) + 1))
 			printf("Success.\n");
 		else
 			printf("Failed.\n");
@@ -75,7 +75,7 @@ void client(char *remote_addr, u_short port, lnc_key_t *key) {
 	lnc_sock_t *socket;
 	lnc_hash_t ret;	
 	uint8_t *buf, *rndart;
-	uint32_t status, rcvd;
+	int status, rcvd;
 
 	printf("Connecting to %s:%d... ", remote_addr, port);
 	socket = lnc_connect(remote_addr, port, key, &status);
@@ -94,7 +94,7 @@ void client(char *remote_addr, u_short port, lnc_key_t *key) {
 
 	printf("\nReceiving Data... ");
 
-	if(rcvd = lnc_recv(socket, &buf)) {
+	if((rcvd = lnc_recv(socket, &buf)) != 0) {
 		printf("%d bytes.\n", rcvd);
 		printf("Data:    '%s'\n", buf);
 
@@ -104,7 +104,7 @@ void client(char *remote_addr, u_short port, lnc_key_t *key) {
 			ret.h4, ret.h5, ret.h6, ret.h7);
 		lnc_clear_hash(ret);
 
-		ret = lnc_sha256(TESTMSG, strlen(TESTMSG));
+		ret = lnc_sha256((uint8_t*)TESTMSG, strlen(TESTMSG));
 		printf("TESTMSG: %08x%08x%08x%08x%08x%08x%08x%08x\n",
 			ret.h0, ret.h1, ret.h2, ret.h3,
 			ret.h4, ret.h5, ret.h6, ret.h7);
@@ -121,7 +121,7 @@ void usage(char *argv) {
 	printf("-c:		Connect\n");
 	printf("-l:		Listen\n");
 	printf("-k:		Key file\n");
-	printf("-k:		Port\n");
+	printf("-p:		Port\n");
 	printf("Option -p is required.\n");	
 	printf("Options -c and -l are mutually exclusive.\n");
 }
@@ -168,6 +168,11 @@ int main(int argc, char **argv) {
 				usage(argv[0]);
 				return EXIT_FAILURE;
 		}
+	}
+
+	if(!portnum || (!listen && !remote_addr)) {
+		usage(argv[0]);
+		return EXIT_FAILURE;
 	}
 
 	lnc_init();

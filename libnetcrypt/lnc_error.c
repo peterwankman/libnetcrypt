@@ -56,6 +56,7 @@ static char *alloc_and_copy(const char *str) {
 }
 
 static void print_windows_errmsg(int winderr) {
+#ifdef _MSC_VER
 	char *winderrstr;
 
 	FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_IGNORE_INSERTS,
@@ -63,6 +64,7 @@ static void print_windows_errmsg(int winderr) {
 
 	fprintf(stderr, "-- %s", winderrstr);
 	LocalFree(winderrstr);
+#endif
 }
 
 char *lnc_strerror(const int lnc_errno) {
@@ -113,11 +115,13 @@ void lnc_perror(const int lnc_errno, const char *str) {
 	if(errstr) {
 		fprintf(stderr, "%s\n", errstr);
 		free(errstr);
+#ifdef _MSC_VER
 		if(iswserr(lnc_errno)) {
 			   print_windows_errmsg(WSAGetLastError());
 		} else if(iswinderr(lnc_errno)){
 			print_windows_errmsg(GetLastError());
 		}
+#endif
 	} else
 		fprintf(stderr, "Double fault. lnc_strerror() failed.\n");
 }

@@ -26,6 +26,17 @@
 
 #ifdef _MSC_VER
 #include <WinSock2.h>
+#else
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <netdb.h>
+#define SOCKET int
+#define SOCKADDR struct sockaddr
+#define SOCKADDR_IN struct sockaddr_in
+#define ADDR_ANY INADDR_ANY
+#define INVALID_SOCKET -1
+#define SOCKET_ERROR -1
 #endif
 
 #include "lnc_typedefs.h"

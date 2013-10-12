@@ -29,7 +29,7 @@ This file implements the OpenSSH  fingerprint visualization
  * http://www.dirk-loss.de/sshvis/drunken_bishop.pdf
  */
 
-#include "..\shared\mem.h"
+#include "../shared/mem.h"
 #include "lnc.h"
 
 #define X_SIZE	17

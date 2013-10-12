@@ -21,9 +21,6 @@
  * 
  */
 
-#include <WinSock2.h>
-#include <Windows.h>
-
 #include <stdio.h>
 #include <time.h>
 
@@ -161,15 +158,18 @@ lnc_sock_t *lnc_connect(const char *remote_addr, const u_short port, const lnc_k
 }
 
 int lnc_init(void) {
+#ifdef _MSC_VER
 	WSADATA wsa;
 	if(WSAStartup(MAKEWORD(2,0), &wsa) != 0)
 		return LNC_ERR_INIT;
-	
+#endif
 	return LNC_OK;
 }
 
 void lnc_exit(void) {
+#ifdef _MSC_VER
 	WSACleanup();
+#endif
 }
 
 void lnc_freesock(lnc_sock_t *socket) {

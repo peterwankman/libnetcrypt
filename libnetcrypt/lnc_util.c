@@ -59,7 +59,7 @@ size_t lnc_mksalt(char **saltout, size_t *slen) {
 	*slen = SALTLEN / 8;
 
 	if(*slen > UINT_MAX) {
-		fprintf(stderr, "ERROR (util.c/lnc_mksalt): saltlen too big.\n", *slen);
+		fprintf(stderr, "ERROR (util.c/lnc_mksalt): saltlen too big.\n");
 		return 0;
 	}
 
@@ -118,9 +118,9 @@ uint8_t *lnc_hex2char(const char *in, size_t len) {
 	return out;
 }
 
-int lnc_salt_hash(const char *in, const size_t len, const char *salthex, char **hashout) {
+int lnc_salt_hash(const char *in, const size_t len, const uint8_t *salthex, char **hashout) {
 	lnc_hash_t hash;	
-	char *buf, *salt;
+	uint8_t *buf, *salt;
 	size_t slen = strlen(salthex) / 2;
 	size_t i;
 
@@ -157,6 +157,7 @@ int lnc_salt_hash(const char *in, const size_t len, const char *salthex, char **
 
 int lnc_fill_random(unsigned char *dst, int len, void *dat) { 
 	int ret = len;
+#ifdef _MSC_VER
 #ifndef U_S_A_U_S_A_U_S_A
     HCRYPTPROV provider; 
      
@@ -183,6 +184,14 @@ int lnc_fill_random(unsigned char *dst, int len, void *dat) {
 	}
     BCryptCloseAlgorithmProvider(provider, 0); 
 #endif 
+#else
+	FILE *fp;
+	if((fp = fopen("/dev/urandom", "r")) == NULL)
+		return 0;
+
+	ret = fread(dst, 1, len, fp);
+	fclose(fp);
+#endif
     return ret; 
 }
 
@@ -319,17 +328,16 @@ uint8_t *lnc_pad(const uint8_t *data, const uint32_t bsize, const uint32_t inlen
 
 char *get_line(FILE *fp) {
 	int size = 0;
-	size_t len, last = 0;
+	size_t len = 0;
 	char *buf  = NULL;
 
 	do {
 		size += MAXBUF;
 		buf = realloc(buf, size);
-		fgets(buf + last, MAXBUF, fp);
+		fgets(buf + len, MAXBUF, fp);
 		len = strlen(buf);
-		last = len - 1;
-	} while (!feof(fp) && buf[last]!='\n');
-	buf[last] = '\0';
+	} while (!feof(fp) && buf[len - 1]!='\n');
+	buf[len - 1] = '\0';
 
 	return buf;
 }
