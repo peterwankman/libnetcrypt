@@ -51,17 +51,16 @@ static int sendmp(SOCKET s, mp_int mpi) {
 
 static int recvmp(SOCKET s, mp_int *mpi) {
 	uint8_t *buf;
-	uint32_t recvint, size;
+	uint32_t recvint, recvd = 0, size;
 	int ret = LNC_OK;
 	
 	if(recv(s, (char*)&recvint, sizeof(recvint), 0) != sizeof(recvint)) return LNC_ERR_READ;
 	size = lnc_conv_endian(recvint);
-
+	
 	if((buf = malloc(size)) == NULL) return LNC_ERR_MALLOC;
-	if(recv(s, buf, size, 0) != size) {
-		free(buf);
-		return LNC_ERR_READ;
-	}
+	do {
+		recvd += recv(s, buf + recvd, size, 0);
+	} while(size > recvd);
 
 	if(mp_read_unsigned_bin(mpi, buf, size) != MP_OKAY)
 		ret = LNC_ERR_LTM;
@@ -260,7 +259,7 @@ int lnc_handshake_client(lnc_sock_t *socket, const lnc_key_t *key) {
 	if((recvmp(s, &root) != LNC_OK) || (recvmp(s, &modulus) != LNC_OK) || (recvmp(s, &server_key) != LNC_OK)) {
 		mp_clear_multi(&root, &modulus, &public_key, &server_key, &shared_key, NULL);
 		send(s, (char*)&nack, sizeof(nack), 0);
-		return LNC_ERR_LTM;
+		return LNC_ERR_READ;
 	}
 
 	if((mp_cmp_d(&server_key, 1) == MP_EQ) || (mp_cmp_d(&root, 1) == MP_EQ)) {
