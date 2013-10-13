@@ -22,8 +22,7 @@ is called in lnc_util.c in the function lnc_fill_random(). Everywhere else when
 random numbers are needed, this function is called. A patriotic mode is avai-
 lable with the macro U_S_A_U_S_A_U_S_A. The random number provider will then
 be changed to the NSA-friendly Dual_EC_DRBG.
-The immediate goal is to support at least GNU/Linux, if not other free OSes.
-I will then use /dev/random or urandom where available.
+In GNU/Linux, the library uses /dev/urandom for random numbers.
 
 DIFFIE-HELLMAN
 
@@ -40,6 +39,19 @@ lnc_dh.c:lnc_gen_key()
 lnc_dh.c:lnc_gen_client_key()
 lnc_proto.c:lnc_handshake_server()
 lnc_proto.c:lnc_handshake_client()
+
+libnetcrypt does not provide features for automatic authentication of DH keys.
+SSL shows that a infrastructure of Certificate Authorities is horribly broken,
+so I encourage a Trust On First Use form of authentication. Let the user check
+a hash of the key on first connect to the server and tell them that somebody
+might be trying something nasty if the key ever changes.
+
+I provide an implementation of the OpenSSH randart algorithm to visualize arbi-
+trary data. This can be used to generate an easy to compare ASCII-art represen-
+tation of the key. It can be calculated for any new public key received from a
+server and be displayed to the user for visual confirmation, if he is expected
+to have the necessary expertise to know what that means and actually care if 
+the randart ever looks unfamiliar.
 
 AES, SHA256
 
