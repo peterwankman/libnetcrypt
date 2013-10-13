@@ -119,18 +119,20 @@ void client(char *remote_addr, u_short port, lnc_key_t *key) {
 void usage(char *argv) {
 	printf("USAGE: %s [-c <ADDR] [-k <FILENAME>] [-l] -p <PORT>\n", argv);
 	printf("-c:		Connect\n");
-	printf("-l:		Listen\n");
 	printf("-k:		Key file\n");
+	printf("-l:		Listen\n");	
 	printf("-p:		Port\n");
+	printf("-s:		Key size\n");
 	printf("Option -p is required.\n");	
 	printf("Options -c and -l are mutually exclusive.\n");
+	printf("Key size defaults to %d bits.\n", KEYSIZE);
 }
 
 lnc_key_t *new_key(int size, char *filename) {
 	lnc_key_t *out;
 	int status;
 
-	out = lnc_gen_key(KEYSIZE, &status);
+	out = lnc_gen_key(size, &status);
 	if(status != LNC_OK) {
 		lnc_perror(status, "ERROR (libnetcrypt/lnc_gen_key)");
 		return NULL;
@@ -149,12 +151,12 @@ lnc_key_t *new_key(int size, char *filename) {
 }
 
 int main(int argc, char **argv) {
-	int c, listen = 0, status;
+	int c, listen = 0, status, keysize = KEYSIZE;
 	u_short portnum = 0;
 	char *remote_addr = NULL, *keyfile = NULL;
 	lnc_key_t *key;
 	
-	while((c = getopt(argc, argv, "c:k:lp:")) != -1) {
+	while((c = getopt(argc, argv, "c:k:lp:s:")) != -1) {
 		switch(c) {
 			case 'c': remote_addr = optarg;	break;
 			case 'k':
@@ -163,6 +165,8 @@ int main(int argc, char **argv) {
 				listen = 1; break;
 			case 'p':
 				portnum = atoi(optarg);	break;
+			case 's':
+				keysize = atoi(optarg); break;
 			case ':':
 			case '?':
 				usage(argv[0]);
@@ -176,22 +180,23 @@ int main(int argc, char **argv) {
 	}
 
 	lnc_init();
+	printf("%d\n", keysize);
 
 	if(keyfile) {		
 		key = lnc_key_from_file(keyfile, &status);
 		if(status == LNC_ERR_OPEN) {
 			printf("Key file does not exist. Generating a new one...\n");
-			key = new_key(KEYSIZE, keyfile);
+			key = new_key(keysize, keyfile);
 		} else if(status != LNC_OK) {
 			lnc_perror(status, "ERROR (libnetcrypt)");
 			return EXIT_FAILURE;
 		}
 	} else if(listen) {		
 		printf("Generating one-time server key...\n");
-		key = new_key(KEYSIZE, NULL);
+		key = new_key(keysize, NULL);
 	} else {
 		printf("Generating one-time client key... ");
-		key = lnc_gen_client_key(KEYSIZE, &status);
+		key = lnc_gen_client_key(keysize, &status);
 		if(status != LNC_OK) {
 			printf("Failed.\n");
 			lnc_perror(status, "ERROR (libnetcrypt)");
