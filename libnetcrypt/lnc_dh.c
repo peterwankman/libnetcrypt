@@ -87,7 +87,6 @@ lnc_key_t *lnc_gen_key(const uint32_t size, int *status) {
 		*status = LNC_ERR_OVER;
 		return NULL;
 	}
-
 	
 	test_small = mp_prime_rabin_miller_trials((int)smallsize);
 	test_full = mp_prime_rabin_miller_trials((int)size);
