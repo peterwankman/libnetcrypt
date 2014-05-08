@@ -21,7 +21,7 @@ libnetcrypt uses the Windows Crypto API to generate random numbers. The PRNG
 is called in lnc_util.c in the function lnc_fill_random(). Everywhere else when
 random numbers are needed, this function is called. A patriotic mode is avai-
 lable with the macro U_S_A_U_S_A_U_S_A. The random number provider will then
-be changed to the NSA-friendly Dual_EC_DRBG.
+be changed to Dual_EC_DRBG, so the terrorists lose.
 In GNU/Linux, the library uses /dev/urandom for random numbers.
 
 DIFFIE-HELLMAN
@@ -53,7 +53,7 @@ server and be displayed to the user for visual confirmation, if he is expected
 to have the necessary expertise to know what that means and actually care if 
 the randart ever looks unfamiliar.
 
-AES, SHA256
+AES, CAST6, SHA256
 
 The implementations of these algorithms were only tested for giving correct
 results. They are not designed to resist any attacks not directed at the
