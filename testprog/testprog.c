@@ -23,6 +23,8 @@
 
 #include <stdio.h>
 
+#define WITH_SHA256
+
 #include "../shared/mem.h"
 #include "../libnetcrypt/lnc.h"
 #include "../libtommath/tommath.h"
