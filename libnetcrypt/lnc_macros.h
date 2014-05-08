@@ -21,11 +21,10 @@
  * 
  */
 
-#ifndef GETOPT_H_
-#define GETOPT_H_
+#ifndef LNC_MISC_H_
+#define LNC_MISC_H_
 
-int getopt(int argc, char * const argv[], const char *optstring);
-extern char *optarg;
-extern int optind, opterr, optopt;
+#define rotl(i, n) (((i) << (n)) | ((i) >> (32 - (n))))
+#define rotr(i, n) (((i) >> (n)) | ((i) << (32 - (n))))
 
 #endif

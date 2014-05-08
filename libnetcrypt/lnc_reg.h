@@ -21,11 +21,16 @@
  * 
  */
 
-#ifndef GETOPT_H_
-#define GETOPT_H_
+#ifndef LNC_REG_H_
+#define LNC_REG_H_
 
-int getopt(int argc, char * const argv[], const char *optstring);
-extern char *optarg;
-extern int optind, opterr, optopt;
+#include "lnc.h"
+
+int lnc_reg_sym_alg(char *name, size_t bsize, size_t ksize,
+	lnc_symfunc_t enc, lnc_symfunc_t dec);
+int lnc_reg_hash_alg(char *name, size_t outsize, lnc_hashfunc_t func);
+void lnc_free_algs(void);
+void lnc_reg_builtin(void);
+void lnc_list_algs(void);
 
 #endif

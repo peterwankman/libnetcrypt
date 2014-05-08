@@ -1,7 +1,7 @@
 /* 
  * libnetcrypt -- Encrypted communication with DH and AES
  * 
- * Copyright (C) 2013  Martin Wolters
+ * Copyright (C) 2013-2014  Martin Wolters
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -41,6 +41,7 @@
 
 #include "lnc_typedefs.h"
 #include "lnc_aes.h"
+#include "lnc_cast6.h"
 #include "lnc_dh.h"
 #include "lnc_error.h"
 #include "lnc_proto.h"

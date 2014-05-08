@@ -1,7 +1,7 @@
 /* 
  * libnetcrypt -- Encrypted communication with DH and AES
  * 
- * Copyright (C) 2013  Martin Wolters
+ * Copyright (C) 2013-2014  Martin Wolters
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -48,5 +48,6 @@ lnc_key_t *lnc_key_from_file(char *filename, int *status);
 void lnc_xor_block(uint8_t *b1, const uint8_t *b2, const uint32_t len);
 uint8_t *lnc_pad(const uint8_t *data, const uint32_t bsize, const uint32_t inlen, uint32_t *newlen);
 char *get_line(FILE *fp);
+void lnc_key_to_file_new(lnc_key_t *key, char *filename, int *status);
 
 #endif

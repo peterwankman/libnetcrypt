@@ -21,11 +21,3 @@
  * 
  */
 
-#ifndef GETOPT_H_
-#define GETOPT_H_
-
-int getopt(int argc, char * const argv[], const char *optstring);
-extern char *optarg;
-extern int optind, opterr, optopt;
-
-#endif

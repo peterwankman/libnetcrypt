@@ -1,7 +1,7 @@
 /* 
  * libnetcrypt -- Encrypted communication with DH and AES
  * 
- * Copyright (C) 2013  Martin Wolters
+ * Copyright (C) 2013-2014  Martin Wolters
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -21,6 +21,7 @@
  * 
  */
 
+#ifdef WITH_SHA256
 #include <stdint.h>
 
 #ifndef LNC_SHA256_H_
@@ -30,3 +31,4 @@
 lnc_hash_t lnc_sha256(const uint8_t *in, const size_t size);
 
 #endif 
+#endif

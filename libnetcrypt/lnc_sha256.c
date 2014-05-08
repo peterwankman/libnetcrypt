@@ -1,7 +1,7 @@
 /* 
  * libnetcrypt -- Encrypted communication with DH and AES
  * 
- * Copyright (C) 2013  Martin Wolters
+ * Copyright (C) 2013-2014  Martin Wolters
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -23,14 +23,16 @@
 
 /* From the description of SHA-256 in Wikipedia */
 
+#ifdef WITH_SHA256
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "../shared/mem.h"
 #include "lnc.h"
+#include "lnc_macros.h"
 
-#define rotr(x, n) ((x >> n) | (x << (32 - n)))
+/* #define rotr(x, n) ((x >> n) | (x << (32 - n))) */
 
 static const unsigned int K[64] = {
 	0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
@@ -206,3 +208,4 @@ lnc_hash_t lnc_sha256(const uint8_t *in, const size_t insize) {
 
 	return out;
 }
+#endif

@@ -1,7 +1,7 @@
 /* 
  * libnetcrypt -- Encrypted communication with DH and AES
  * 
- * Copyright (C) 2013  Martin Wolters
+ * Copyright (C) 2013-2014  Martin Wolters
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -32,7 +32,7 @@
 #define LNC_ERR_BIND	5
 #define LNC_ERR_LISTEN	6
 #define LNC_ERR_MALLOC	7
-#define LNC_ERR_key		8
+#define LNC_ERR_KEY		8
 #define LNC_ERR_OVER	9
 #define LNC_ERR_LTM		10
 #define LNC_ERR_OPEN	11
@@ -41,6 +41,7 @@
 #define LNC_ERR_WRITE	14
 #define LNC_ERR_WEAK	15
 #define LNC_ERR_NACK	16
+#define LNC_ERR_VAL		17
 
 char *lnc_strerror(const int lnc_errno);
 void lnc_perror(const int lnc_errno, const char *str);

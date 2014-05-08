@@ -1,7 +1,7 @@
 /* 
  * libnetcrypt -- Encrypted communication with DH and AES
  * 
- * Copyright (C) 2013  Martin Wolters
+ * Copyright (C) 2013-2014  Martin Wolters
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -22,6 +22,7 @@
  */
 
 #include "lnc_typedefs.h"
+#include "lnc_macros.h"
 
 #ifndef LNC_AES_H
 #define LNC_AES_H
@@ -29,7 +30,6 @@
 #define FOR_MIX 1
 #define INV_MIX 2
 
-#define rotl(i, n) ((i << n) | (i >> (32 - n)))
 #define rot_byte(i) rotl(i, 8)
 #define sub_byte(i) ((S[i >> 24] << 24) |\
                     (S[(i >> 16) & 255] << 16) |\
@@ -45,9 +45,12 @@
 
 void lnc_aes_enc(lnc_aes_ctx_t context);
 void lnc_aes_dec(lnc_aes_ctx_t context);
-void lnc_aes_update(lnc_aes_ctx_t *context, uint8_t *msg, uint8_t *key);
-void lnc_aes_init(lnc_aes_ctx_t *context, uint8_t *msg, uint8_t *key);
+void lnc_aes_update(lnc_aes_ctx_t *context, uint8_t *msg, uint8_t *key, int *status);
+void lnc_aes_init(lnc_aes_ctx_t *context, uint8_t *msg, uint8_t *key, int *status);
 void lnc_aes_free(lnc_aes_ctx_t context);
-uint8_t *lnc_aes_tochar(lnc_aes_ctx_t context);
+uint8_t *lnc_aes_tochar(lnc_aes_ctx_t context, int *status);
+
+uint8_t *lnc_aes_enc_block(uint8_t *msg, uint8_t *key, int *status);
+uint8_t *lnc_aes_dec_block(uint8_t *msg, uint8_t *key, int *status);
 
 #endif

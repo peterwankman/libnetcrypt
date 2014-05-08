@@ -1,7 +1,7 @@
 /* 
  * libnetcrypt -- Encrypted communication with DH and AES
  * 
- * Copyright (C) 2013  Martin Wolters
+ * Copyright (C) 2013-2014  Martin Wolters
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -85,7 +85,7 @@ char *lnc_strerror(const int lnc_errno) {
 			return alloc_and_copy("listen() failed."); break;
 		case LNC_ERR_MALLOC:
 			return alloc_and_copy("malloc() failed."); break;
-		case LNC_ERR_key:
+		case LNC_ERR_KEY:
 			return alloc_and_copy("Invalid key."); break;
 		case LNC_ERR_OVER:
 			return alloc_and_copy("Integer overflow."); break;
@@ -103,6 +103,8 @@ char *lnc_strerror(const int lnc_errno) {
 			return alloc_and_copy("Weak key.");
 		case LNC_ERR_NACK:
 			return alloc_and_copy("Remote side rejected transmission.");
+		case LNC_ERR_VAL:
+			return alloc_and_copy("Invalid value.");
 	}
 
 	return alloc_and_copy("Unknown error code.");

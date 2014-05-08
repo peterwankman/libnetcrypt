@@ -1,7 +1,7 @@
 /* 
  * libnetcrypt -- Encrypted communication with DH and AES
  * 
- * Copyright (C) 2013  Martin Wolters
+ * Copyright (C) 2013-2014  Martin Wolters
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -24,6 +24,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #ifdef _MSC_VER
 #include <WinSock2.h>
@@ -230,7 +231,7 @@ void lnc_key_to_file(lnc_key_t *key, char *filename, int *status) {
 	if((ret = mp_to_file(&(key->public_key), fp)) != LNC_OK)
 		goto err;
 
-	ret = LNC_OK;	
+	ret = LNC_OK;
 err:
 	fclose(fp);
 	*status = ret;
@@ -279,7 +280,7 @@ lnc_key_t *lnc_key_from_file(char *filename, int *status) {
 	mp_exptmod(&root, &secret_key, &modulus, &test);
 
 	if(mp_cmp_mag(&public_key, &test) != MP_EQ) {
-		*status = LNC_ERR_key;
+		*status = LNC_ERR_KEY;
 		mp_clear(&test);
 		goto err;
 	}	
@@ -327,8 +328,7 @@ uint8_t *lnc_pad(const uint8_t *data, const uint32_t bsize, const uint32_t inlen
 }
 
 char *get_line(FILE *fp) {
-	int size = 0;
-	size_t len = 0;
+	size_t len = 0, size = 0;
 	char *buf  = NULL;
 
 	do {
@@ -340,4 +340,178 @@ char *get_line(FILE *fp) {
 	buf[len - 1] = '\0';
 
 	return buf;
+}
+
+/* NEW KEYFILE FORMAT */
+
+static char *mp_to_char(mp_int *i, size_t *len, int *status) {
+	char *intbuf, *outbuf;
+	int bitsize, size;
+
+	*len = 0;
+
+	if(mp_radix_size(i, 2, &bitsize) != MP_OKAY) {
+		*status = LNC_ERR_LTM;
+		return NULL;
+	}
+
+	if(bitsize > 0xffff) {
+		*status = LNC_ERR_OVER;
+		return NULL;
+	}
+
+	if((size = mp_unsigned_bin_size(i)) == 0) {		
+		*status = LNC_ERR_LTM;
+		return NULL;
+	}
+
+	if((intbuf = malloc(size)) == NULL) {
+		*status = LNC_ERR_MALLOC;
+		return NULL;
+	}
+
+	if((outbuf = malloc(size + 2)) == NULL) {
+		free(intbuf);
+		*status = LNC_ERR_MALLOC;
+		return NULL;
+	}
+
+	if(mp_to_unsigned_bin(i, intbuf) != MP_OKAY) {
+		free(intbuf);
+		free(outbuf);
+		*status = LNC_ERR_LTM;
+		return NULL;
+	}
+
+	outbuf[0] = (bitsize >> 8) & 0xff;
+	outbuf[1] = bitsize & 0xff;
+
+	memcpy(outbuf + 2, intbuf, size);
+	free(intbuf);
+
+	*len = (size_t)(size + 2);
+	*status = LNC_OK;
+
+	return outbuf;
+}
+
+static char *r64_table = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
+
+static char *encode_radix64(const char *in, const size_t len, int *status) {
+	size_t pos = 0, remlen = len;
+	size_t outpos = 0, outlen = ((len / 3 + 1) * 4 + 1);
+	char *out = malloc(outlen);
+
+	if(!out) {
+		*status = LNC_ERR_MALLOC;
+		return NULL;
+	}
+	memset(out, 0, outlen);
+
+	while(remlen >= 3) {
+		out[outpos++] = r64_table[(in[pos] >> 2) & 63];
+		out[outpos++] = r64_table[(((in[pos] & 3) << 4) | ((in[pos + 1] >> 4) & 15)) & 63];
+		out[outpos++] = r64_table[(((in[pos + 1] & 15) << 2) | ((in[pos + 2] >> 6) & 3)) & 63];
+		out[outpos++] = r64_table[in[pos + 2] & 63];
+
+		remlen -= 3;
+		pos += 3;
+	}
+
+	if(remlen == 2) {
+		out[outpos++] = r64_table[(in[pos] >> 2) & 63];
+		out[outpos++] = r64_table[(((in[pos] & 3) << 4) | ((in[pos + 1] >> 4) & 15)) & 63];
+		out[outpos++] = r64_table[((in[pos + 1] & 15) << 2) & 63];
+		out[outpos++] = r64_table[64];
+	} else if(remlen == 1) {
+		out[outpos++] = r64_table[(in[pos] >> 2) & 63];
+		out[outpos++] = r64_table[((in[pos] & 3) << 4) & 63];
+		out[outpos++] = r64_table[64];
+		out[outpos++] = r64_table[64];
+	}
+
+	*status = LNC_OK;
+	return out;
+}
+
+void lnc_key_to_file_new(lnc_key_t *key, char *filename, int *status) {
+	FILE *fp = fopen(filename, "w");
+	int ret = LNC_ERR_OPEN;
+	size_t idx;
+	time_t now;
+
+	char *outbuf, *encoded;
+	char *generator, *modulus, *secret_key, *public_key;
+	size_t gensize, modsize, secsize, pubsize;
+	int i = 0;
+
+	/* gmsp */
+
+	if(!fp)
+		goto err;
+
+	if((generator = mp_to_char(&key->generator, &gensize, &ret)) == NULL)
+		goto err;
+	if((modulus = mp_to_char(&key->modulus, &modsize, &ret)) == NULL)
+		goto err;
+	if((secret_key = mp_to_char(&key->secret_key, &secsize, &ret)) == NULL)
+		goto err;
+	if((public_key = mp_to_char(&key->public_key, &pubsize, &ret)) == NULL)
+		goto err;
+
+	if((outbuf = malloc(
+		1 + /* Version */
+		4 + /* Timestamp */
+		gensize + modsize + secsize + pubsize)) == NULL) {
+			ret = LNC_ERR_MALLOC;
+			goto err;
+	}
+
+	now = time(NULL);
+
+	outbuf[0] = LNC_PROTO_VER & 0xff;
+	outbuf[1] = (now >> 24) & 0xff;
+	outbuf[2] = (now >> 16) & 0xff;
+	outbuf[3] = (now >> 8) & 0xff;
+	outbuf[4] = now & 0xff;
+
+	idx = 5;
+
+	memcpy(outbuf + idx, generator, gensize);	idx += gensize;
+	memcpy(outbuf + idx, modulus, modsize);		idx += modsize;
+	memcpy(outbuf + idx, secret_key, secsize);	idx += secsize;
+	memcpy(outbuf + idx, public_key, pubsize);	idx += pubsize;
+
+	free(generator);
+	free(modulus);
+	free(secret_key);
+	free(public_key);
+
+	encoded = encode_radix64(outbuf, idx, &ret);
+	free(outbuf);
+
+	if(encoded == NULL)
+		goto err;
+		
+	fprintf(fp, "***********************************\n");
+	fprintf(fp, "***** This is your secret key *****\n");
+	fprintf(fp, "***** DO NOT SHARE THIS FILE! *****\n");
+	fprintf(fp, "***********************************\n\n");
+	fprintf(fp, "-----BEGIN LNC SECRET KEY BLOCK-----\n");
+	
+	while(encoded[i]) {
+		fputc(encoded[i++], fp);
+		if(!(i % 76))
+			fputc('\n', fp);
+	}
+
+	if(i % 76)
+		fprintf(fp, "\n");
+	fprintf(fp, "-----END LNC SECRET KEY BLOCK-----\n");
+
+	free(encoded);
+
+err:
+	fclose(fp);
+	*status = ret;
 }

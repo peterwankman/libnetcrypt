@@ -1,7 +1,7 @@
 /* 
  * libnetcrypt -- Encrypted communication with DH and AES
  * 
- * Copyright (C) 2013  Martin Wolters
+ * Copyright (C) 2013-2014  Martin Wolters
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -191,12 +191,14 @@ static void add_roundkey(uint8_t *state, uint32_t *expkey, int round) {
 	}
 }
 
-static uint32_t *expand_key(uint32_t *key) {
+static uint32_t *expand_key(uint32_t *key, int *status) {
 	int i;
 	uint32_t temp, *W;
 
-	if((W = malloc(Nb * (Nr + 1) * sizeof(uint32_t))) == NULL)
+	if((W = malloc(Nb * (Nr + 1) * sizeof(uint32_t))) == NULL) {
+		*status = LNC_ERR_MALLOC;
 		return NULL;
+	}
 
 	for(i = 0; i < Nk; i++)
 		W[i] = key[i];
@@ -212,16 +214,19 @@ static uint32_t *expand_key(uint32_t *key) {
 #endif
 		W[i] = W[i - Nk] ^ temp;
 	}
-
+	
+	*status = LNC_OK;
 	return W;
 }
 
-static uint8_t *mkstate(uint8_t *msg) {
+static uint8_t *mkstate(uint8_t *msg, int *status) {
     uint8_t *state;
     int i;
 
-    if((state = malloc(LNC_AES_BSIZE)) == NULL)
+    if((state = malloc(LNC_AES_BSIZE)) == NULL) {
+		*status = LNC_ERR_MALLOC;
         return NULL;
+	}
 
     for(i = 0; i < Nb; i++) {
         state[i] = msg[i * Nb];
@@ -230,6 +235,7 @@ static uint8_t *mkstate(uint8_t *msg) {
         state[3 * Nb + i] = msg[i * Nb + 3];
     }
 
+	*status = LNC_OK;
     return state;
 }
 
@@ -239,6 +245,7 @@ void lnc_aes_enc(lnc_aes_ctx_t context) {
 	uint8_t *state = context.state;
 
 	add_roundkey(state, expkey, 0);
+
 	for(i = 1; i < Nr; i++) {
 		sub_bytes(state);
 		shift_rows(state);
@@ -267,9 +274,11 @@ void lnc_aes_dec(lnc_aes_ctx_t context) {
 	add_roundkey(state, expkey, 0);
 }
 
-void lnc_aes_update(lnc_aes_ctx_t *context, uint8_t *msg, uint8_t *key) {
+void lnc_aes_update(lnc_aes_ctx_t *context, uint8_t *msg, uint8_t *key, int *status) {
 	uint32_t int_key[Nk];
 	int i;
+
+	*status = LNC_OK;
 
 	if(key) {
 		free(context->expkey);
@@ -278,16 +287,18 @@ void lnc_aes_update(lnc_aes_ctx_t *context, uint8_t *msg, uint8_t *key) {
 						key[i * 4 + 1] << 16 |
 						key[i * 4 + 2] << 8 |
 						key[i * 4 + 3];
-		context->expkey = expand_key(int_key);
+		context->expkey = expand_key(int_key, status);
+		if(status != LNC_OK)
+			return;
 	}	
 	
 	if(msg) {
 		free(context->state);
-		context->state = mkstate(msg);
+		context->state = mkstate(msg, status);
 	}
 }
 
-void lnc_aes_init(lnc_aes_ctx_t *context, uint8_t *msg, uint8_t *key) {
+void lnc_aes_init(lnc_aes_ctx_t *context, uint8_t *msg, uint8_t *key, int *status) {
 	uint32_t int_key[Nk];
 	int i;
 	
@@ -296,9 +307,12 @@ void lnc_aes_init(lnc_aes_ctx_t *context, uint8_t *msg, uint8_t *key) {
 					key[i * 4 + 1] << 16 |
 					key[i * 4 + 2] << 8 |
 					key[i * 4 + 3];
-	context->expkey = expand_key(int_key);
 
-	context->state = mkstate(msg);
+	context->expkey = expand_key(int_key, status);
+	if(*status != LNC_OK)
+		return;
+
+	context->state = mkstate(msg, status);
 }
 
 void lnc_aes_free(lnc_aes_ctx_t context) {
@@ -306,17 +320,43 @@ void lnc_aes_free(lnc_aes_ctx_t context) {
 	free(context.state);
 }
 
-uint8_t *lnc_aes_tochar(lnc_aes_ctx_t context) {
+uint8_t *lnc_aes_tochar(lnc_aes_ctx_t context, int *status) {
 	uint8_t *out = malloc(LNC_AES_BSIZE);
 	int i, j;
 
-	if(out == NULL)
+	if(out == NULL) {
+		*status = LNC_ERR_MALLOC;
 		return NULL;
+	}
 
 	for(i = 0; i < 4; i++) {
 		for(j = 0; j < Nb; j++) {
 			out[i * Nb + j] = context.state[j * Nb + i];
 		}
 	}
+
+	*status = LNC_OK;
 	return out;
+}
+
+uint8_t *lnc_aes_enc_block(uint8_t *msg, uint8_t *key, int *status) {
+	lnc_aes_ctx_t context;
+
+	lnc_aes_init(&context, msg, key, status);
+	if(*status != LNC_OK)
+		return NULL;
+
+	lnc_aes_enc(context);
+	return lnc_aes_tochar(context, status);
+}
+
+uint8_t *lnc_aes_dec_block(uint8_t *msg, uint8_t *key, int *status) {
+	lnc_aes_ctx_t context;
+
+	lnc_aes_init(&context, msg, key, status);
+	if(*status != LNC_OK)
+		return NULL;
+
+	lnc_aes_dec(context);
+	return lnc_aes_tochar(context, status);
 }

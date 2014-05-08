@@ -1,7 +1,7 @@
 /* 
  * libnetcrypt -- Encrypted communication with DH and AES
  * 
- * Copyright (C) 2013  Martin Wolters
+ * Copyright (C) 2013-2014  Martin Wolters
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -26,13 +26,14 @@
 
 #include "../shared/mem.h"
 #include "lnc.h"
+#include "lnc_reg.h"
 
 lnc_sock_t *lnc_accept(lnc_sock_t *socket, const lnc_key_t *key, int *status) {
 	lnc_sock_t *ret;
 	int retval;
 
 	if(!key) {
-		*status = LNC_ERR_key;
+		*status = LNC_ERR_KEY;
 		return NULL;
 	}
 
@@ -108,7 +109,7 @@ lnc_sock_t *lnc_connect(const char *remote_addr, const u_short port, const lnc_k
 	int i = 0;
 
 	if(!key) {
-		*status = LNC_ERR_key;
+		*status = LNC_ERR_KEY;
 		return NULL;
 	}
 
@@ -163,6 +164,8 @@ int lnc_init(void) {
 	if(WSAStartup(MAKEWORD(2,0), &wsa) != 0)
 		return LNC_ERR_INIT;
 #endif
+	lnc_reg_builtin();
+	lnc_list_algs();
 	return LNC_OK;
 }
 
@@ -170,6 +173,7 @@ void lnc_exit(void) {
 #ifdef _MSC_VER
 	WSACleanup();
 #endif
+	lnc_free_algs();
 }
 
 void lnc_freesock(lnc_sock_t *socket) {

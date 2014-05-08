@@ -1,7 +1,7 @@
 /* 
  * mem.c -- Memory leak checker
  * 
- * Copyright (C) 2013  Martin Wolters
+ * Copyright (C) 2013-2014  Martin Wolters
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -35,6 +35,17 @@ typedef struct ml {
 
 static memlist_item_t *end = NULL, *start = NULL;
 static size_t mem_allocated = 0;
+
+static char *filefrompath(const char *path) {
+	size_t idx;
+
+	idx = strlen(path);
+
+	while(idx > 1 && path[idx - 1] != '\\' && path[idx - 1] != '/')
+		idx--;
+
+	return path + idx;
+}
 
 static int addtolist(const void *ptr, const size_t n, const char *file, const int line) {
 	memlist_item_t *new_item;
@@ -88,6 +99,9 @@ static size_t delfromlist(void *ptr) {
 	memlist_item_t *curr = start;
 	size_t out = 0;
 
+	if(!ptr)
+		return 0;
+
 	curr = findinlist(ptr);
 	if(curr) {
 		if(curr == start)
@@ -129,7 +143,7 @@ void *mem_alloc(const size_t n, const char *file, const int line) {
 	}
 
 	new = malloc(n);
-	addtolist(new, n, file, line);
+	addtolist(new, n, filefrompath(file), line);
 
 	return new;
 }
@@ -171,7 +185,7 @@ void print_mem_list(void) {
 	memlist_item_t *curr = start;
 
 	while(curr) {
-		printf("%08x %d %d %s\n", curr->ptr, curr->n, curr->line, curr->file);
+		printf("%s:%d %d bytes at 0x%08x.\n", curr->file, curr->line, curr->n, curr->ptr);
 		curr = curr->next;
 	}
 }

@@ -21,11 +21,19 @@
  * 
  */
 
-#ifndef GETOPT_H_
-#define GETOPT_H_
+#ifndef CAST6_H_
+#define CAST6_H_
 
-int getopt(int argc, char * const argv[], const char *optstring);
-extern char *optarg;
-extern int optind, opterr, optopt;
+void lnc_cast6_enc(lnc_cast6_ctx_t *context);
+void lnc_cast6_dec(lnc_cast6_ctx_t *context);
+void lnc_cast6_update(lnc_cast6_ctx_t *context, uint8_t *msg, uint8_t *key, int *status);
+void lnc_cast6_init(lnc_cast6_ctx_t *context, uint8_t *msg, uint8_t *key, int *status);
+void lnc_cast6_free(lnc_cast6_ctx_t context);
+uint8_t *lnc_cast6_tochar(lnc_cast6_ctx_t context, int *status);
+
+uint8_t *lnc_cast6_enc_block(uint8_t *msg, uint8_t *key, int *status);
+uint8_t *lnc_cast6_dec_block(uint8_t *msg, uint8_t *key, int *status);
+
+void initconst(void);
 
 #endif

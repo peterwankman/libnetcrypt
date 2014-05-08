@@ -1,7 +1,7 @@
 /* 
  * libnetcrypt -- Encrypted communication with DH and AES
  * 
- * Copyright (C) 2013  Martin Wolters
+ * Copyright (C) 2013-2014  Martin Wolters
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -180,7 +180,6 @@ int main(int argc, char **argv) {
 	}
 
 	lnc_init();
-	printf("%d\n", keysize);
 
 	if(keyfile) {		
 		key = lnc_key_from_file(keyfile, &status);
@@ -205,6 +204,11 @@ int main(int argc, char **argv) {
 		printf("Done.\n");
 	}
 	
+	/* Test new keyfile format. */
+	lnc_key_to_file_new(key, "keytest.asc", &status);
+	if(status != LNC_OK)
+		lnc_perror(status, "KTF");
+
 	if(remote_addr)
 		client(remote_addr, portnum, key);
 	else if(listen)

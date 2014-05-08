@@ -13,6 +13,18 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Source Files\hash">
+      <UniqueIdentifier>{13890081-5ab8-4558-bd64-09d2e81c9198}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\symmetric">
+      <UniqueIdentifier>{209f6bee-1bd3-4d23-9dc6-850a0d8df55c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\asymmetric">
+      <UniqueIdentifier>{69a21618-2756-4111-a795-1c98b250f5e7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\modes">
+      <UniqueIdentifier>{fd2a462a-e49d-44d1-82e0-6f8d9df8a773}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="lnc.h">
@@ -48,18 +60,24 @@
     <ClInclude Include="lnc_rndart.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="lnc_reg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lnc_macros.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lnc_cast6.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lnc_cast6_tables.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="lnc_dh.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="lnc_error.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="lnc_main.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="lnc_sha256.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="lnc_util.c">
@@ -68,14 +86,32 @@
     <ClCompile Include="..\shared\mem.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="lnc_aes.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="lnc_proto.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="lnc_rndart.c">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="lnc_dh.c">
+      <Filter>Source Files\asymmetric</Filter>
+    </ClCompile>
+    <ClCompile Include="lnc_aes.c">
+      <Filter>Source Files\symmetric</Filter>
+    </ClCompile>
+    <ClCompile Include="lnc_sha256.c">
+      <Filter>Source Files\hash</Filter>
+    </ClCompile>
+    <ClCompile Include="lnc_reg.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ecb.c">
+      <Filter>Source Files\modes</Filter>
+    </ClCompile>
+    <ClCompile Include="cbc.c">
+      <Filter>Source Files\modes</Filter>
+    </ClCompile>
+    <ClCompile Include="lnc_cast6.c">
+      <Filter>Source Files\symmetric</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

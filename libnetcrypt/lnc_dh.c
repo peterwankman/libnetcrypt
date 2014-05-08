@@ -1,7 +1,7 @@
 /* 
  * libnetcrypt -- Encrypted communication with DH and AES
  * 
- * Copyright (C) 2013  Martin Wolters
+ * Copyright (C) 2013-2014  Martin Wolters
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -41,9 +41,9 @@ static int mp_add1(mp_int *a, mp_int *b) {
     return ret;
 }
 
-static int mp_random(mp_int *mpi, size_t size) {
+static int mp_random(mp_int *mpi, const size_t bitsize) {
 	uint8_t *buf;
-	size /= 8;
+	size_t size = bitsize / 8;
 
 	if(size > UINT_MAX)
 		return LNC_ERR_OVER;
@@ -59,7 +59,7 @@ static int mp_random(mp_int *mpi, size_t size) {
 }
 
 /* FROM NIST RECOMMENDATIONS */
-uint32_t lnc_suggest_subgroup(uint32_t modsize) {
+uint32_t lnc_suggest_subgroup(const uint32_t modsize) {
 	if(modsize <= 160)
 		return 0;
 	if(modsize <= 1024)
@@ -74,7 +74,7 @@ uint32_t lnc_suggest_subgroup(uint32_t modsize) {
 		return 511;
 }
 
-lnc_key_t *lnc_gen_key(const uint32_t size, int *status) {
+lnc_key_t *lnc_gen_key(const size_t size, int *status) {
 	mp_int small_prime, random, mul, s, tmp;
 	mp_int modulus, root, public_key, secret_key;
 	int test_small, test_full;
@@ -146,7 +146,7 @@ lnc_key_t *lnc_gen_key(const uint32_t size, int *status) {
 	return out;
 }
 
-lnc_key_t *lnc_gen_client_key(const uint32_t size, int *status) {
+lnc_key_t *lnc_gen_client_key(const size_t size, int *status) {
 	lnc_key_t *out = malloc(sizeof(lnc_key_t));
 
 	if(!out) {

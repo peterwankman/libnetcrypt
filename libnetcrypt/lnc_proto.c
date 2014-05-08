@@ -1,7 +1,7 @@
 /* 
  * libnetcrypt -- Encrypted communication with DH and AES
  * 
- * Copyright (C) 2013  Martin Wolters
+ * Copyright (C) 2013-2014  Martin Wolters
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -105,14 +105,21 @@ static int sendcookie(lnc_sock_t *socket) {
 	uint32_t bufsize;
 	lnc_aes_ctx_t context;
 	char *enccookie;
+	int status;
 
 	if((bufsize = mkcookie(socket)) == 0)
 		return LNC_ERR_MALLOC;
 
-	lnc_aes_init(&context, socket->cookie, socket->sym_key);
+	lnc_aes_init(&context, socket->cookie, socket->sym_key, &status);
+	if(status != LNC_OK)
+		return status;
+
 	lnc_aes_enc(context);
-	enccookie = lnc_aes_tochar(context);
-		
+
+	enccookie = lnc_aes_tochar(context, &status);
+	if(status != LNC_OK)
+		return status;
+
 	bufsize = lnc_conv_endian(socket->cookie_size);
 	if(send(socket->s, (char*)&bufsize, sizeof(bufsize), 0) != sizeof(bufsize)) {
 		free(enccookie);
@@ -133,6 +140,7 @@ static int recvcookie(lnc_sock_t *socket) {
 	uint32_t bufsize;
 	lnc_aes_ctx_t context;
 	char *buf;
+	int status;
 
 	if(recv(socket->s, (char*)&bufsize, sizeof(bufsize), 0) != sizeof(bufsize)) return LNC_ERR_READ;
 	
@@ -147,9 +155,14 @@ static int recvcookie(lnc_sock_t *socket) {
 		return LNC_ERR_READ;
 	}
 
-	lnc_aes_init(&context, buf, socket->sym_key);
+	lnc_aes_init(&context, buf, socket->sym_key, &status);
+	if(status != LNC_OK)
+		return status;
+
 	lnc_aes_dec(context);
-	socket->cookie = lnc_aes_tochar(context);
+	socket->cookie = lnc_aes_tochar(context, &status);
+	if(status != LNC_OK)
+		return status;
 
 	free(buf);
 	lnc_aes_free(context);
@@ -314,10 +327,12 @@ int lnc_handshake_client(lnc_sock_t *socket, const lnc_key_t *key) {
 	return recvcookie(socket);
 }
 
+/* change to allow for checking status */
 int lnc_send(lnc_sock_t *socket, const uint8_t *data, const uint32_t len) {
 	uint8_t IV[LNC_AES_BSIZE], *buf, *padded, *encblock;
 	uint32_t padlen, nblocks, sendblocks, currblock = 1;
 	lnc_aes_ctx_t context;
+	int status;
 
 	lnc_fill_random(IV, LNC_AES_BSIZE, NULL);
 	
@@ -333,9 +348,14 @@ int lnc_send(lnc_sock_t *socket, const uint8_t *data, const uint32_t len) {
 		lnc_xor_block(buf, IV, LNC_AES_BSIZE);
 		lnc_xor_block(buf, socket->cookie, LNC_AES_BSIZE);
 
-		lnc_aes_init(&context, buf, socket->sym_key);
+		lnc_aes_init(&context, buf, socket->sym_key, &status);
+		if(status != LNC_OK)
+			return 0;
+
 		lnc_aes_enc(context);
-		encblock = lnc_aes_tochar(context);
+		encblock = lnc_aes_tochar(context, &status);
+		if(status != LNC_OK)
+			return 0;
 		
 		if(send(socket->s, encblock, LNC_AES_BSIZE, 0) != LNC_AES_BSIZE) {
 			free(encblock);
@@ -356,10 +376,12 @@ int lnc_send(lnc_sock_t *socket, const uint8_t *data, const uint32_t len) {
 	return nblocks;
 }
 
+/* ditto */
 int lnc_recv(lnc_sock_t *socket, uint8_t **dst) {
 	uint32_t recvlen, blockcnt = 1, ret;
 	uint8_t IV[LNC_AES_BSIZE], currblock[LNC_AES_BSIZE], *decblock, *dstbuf;
 	lnc_aes_ctx_t context;
+	int status;
 
 	recv(socket->s, (char*)&recvlen, sizeof(recvlen), 0);
 	recvlen = lnc_conv_endian(recvlen);
@@ -377,9 +399,15 @@ int lnc_recv(lnc_sock_t *socket, uint8_t **dst) {
 		if((ret = recv(socket->s, currblock, LNC_AES_BSIZE, 0)) != LNC_AES_BSIZE)
 			return 0;		
 
-		lnc_aes_init(&context, currblock, socket->sym_key);
+		lnc_aes_init(&context, currblock, socket->sym_key, &status);
+		if(status != LNC_OK)
+			return 0;
+
 		lnc_aes_dec(context);
-		decblock = lnc_aes_tochar(context);
+		decblock = lnc_aes_tochar(context, &status);
+		if(status != LNC_OK)
+			return 0;
+
 		lnc_aes_free(context);
 
 		lnc_xor_block(decblock, socket->cookie, LNC_AES_BSIZE);
