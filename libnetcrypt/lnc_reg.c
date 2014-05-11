@@ -45,67 +45,52 @@ lnc_symdef_t *lnc_asym_algs = NULL;
 size_t lnc_num_asym_algs = 0;
 size_t lnc_alloc_asym_algs = 0;
 
-int lnc_reg_sym_alg(char *name, size_t bsize, size_t ksize,
-	lnc_symfunc_t enc, lnc_symfunc_t dec) {
-
+int lnc_reg_sym_alg(lnc_symdef_t def) {
 	lnc_symdef_t *newblock;
 
 	if(lnc_num_sym_algs % PREALLOC_BLOCK == 0) {
 		newblock = malloc((lnc_alloc_sym_algs + PREALLOC_BLOCK) * sizeof(lnc_symdef_t));
 		if(!newblock)
 			return LNC_ERR_MALLOC;
+
+		printf("%08x\n", newblock);
+
 		memcpy(newblock, lnc_sym_algs, lnc_num_sym_algs * sizeof(lnc_symdef_t));
 		free(lnc_sym_algs);
 		lnc_sym_algs = newblock;
 		lnc_alloc_sym_algs += PREALLOC_BLOCK;
 	}
 
-	if((lnc_sym_algs[lnc_num_sym_algs].name = malloc(strlen(name) + 1)) == NULL)
-		return LNC_ERR_MALLOC;
-
-	strncpy(lnc_sym_algs[lnc_num_sym_algs].name, name, strlen(name) + 1);
-	lnc_sym_algs[lnc_num_sym_algs].bsize = bsize;
-	lnc_sym_algs[lnc_num_sym_algs].ksize = ksize;
-	lnc_sym_algs[lnc_num_sym_algs].encfunc = enc;
-	lnc_sym_algs[lnc_num_sym_algs].decfunc = dec;
-	
+	lnc_sym_algs[lnc_num_sym_algs] = def;
 	lnc_num_sym_algs++;
 
 	return LNC_OK;
 }
 
-int lnc_reg_hash_alg(char *name, size_t outsize, size_t blocksize, lnc_hashfunc_t hashfunc, lnc_freefunc_t freefunc) {
+int lnc_reg_hash_alg(lnc_hashdef_t def) {
 	lnc_hashdef_t *newblock;
 
 	if(lnc_alloc_hash_algs % PREALLOC_BLOCK == 0) {
 		newblock = malloc((lnc_alloc_hash_algs + PREALLOC_BLOCK) * sizeof(lnc_hashdef_t));
 		if(!newblock)
 			return LNC_ERR_MALLOC;
+
 		memcpy(newblock, lnc_hash_algs, lnc_num_hash_algs * sizeof(lnc_hashdef_t));
 		free(lnc_hash_algs);
 		lnc_hash_algs = newblock;
 	}
 
-	if((lnc_hash_algs[lnc_num_hash_algs].name = malloc(strlen(name) + 1)) == NULL)
-		return LNC_ERR_MALLOC;
-
-	strncpy(lnc_hash_algs[lnc_num_hash_algs].name, name, strlen(name) + 1);
-	lnc_hash_algs[lnc_num_hash_algs].outsize = outsize;
-	lnc_hash_algs[lnc_num_hash_algs].blocksize = blocksize;
-	lnc_hash_algs[lnc_num_hash_algs].hashfunc = hashfunc;
-	lnc_hash_algs[lnc_num_hash_algs].freefunc = freefunc;
+	lnc_hash_algs[lnc_num_hash_algs] = def;
 	lnc_num_hash_algs++;
 
 	return LNC_OK;
 }
 
 void lnc_free_algs(void) {
-	while(lnc_num_sym_algs)
-		free(lnc_sym_algs[--lnc_num_sym_algs].name);
+	lnc_num_sym_algs = 0;
 	free(lnc_sym_algs);
 
-	while(lnc_num_hash_algs)
-		free(lnc_hash_algs[--lnc_num_hash_algs].name);
+	lnc_num_hash_algs = 0;
 	free(lnc_hash_algs);
 }
 
@@ -113,16 +98,14 @@ void lnc_reg_builtin(void) {
 	int status;
 
 #ifdef WITH_AES
-	lnc_reg_sym_alg("aes128", LNC_AES_BSIZE, LNC_AES_KSIZE, lnc_aes_enc_block, lnc_aes_dec_block);
+	lnc_reg_sym_alg(lnc_sym_aes);
 #endif
 #ifdef WITH_CAST6
-	lnc_reg_sym_alg("cast6", 16, 32, lnc_cast6_enc_block, lnc_cast6_dec_block);
+	lnc_reg_sym_alg(lnc_sym_cast6);
 #endif
 #ifdef WITH_SHA256
-	lnc_reg_hash_alg("sha256", 32, 64, lnc_sha256, lnc_sha256_free);
+	lnc_reg_hash_alg(lnc_hash_sha256);
 #endif
-
-	lnc_hmac(lnc_hash_algs[0], "key", 3, "The quick brown fox jumps over the lazy dog", 43, &status);
 }
 
 void lnc_list_algs(void) {

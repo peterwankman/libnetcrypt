@@ -27,9 +27,13 @@
 #ifndef LNC_SHA256_H_
 #define LNC_SHA256_H_
 
+#include "lnc_macros.h"
+
 #define lnc_clear_hash(h) free(h.string)
 void lnc_sha256_free(lnc_hash_t *ctx);
 lnc_hash_t lnc_sha256(const uint8_t *in, const size_t size);
+
+LNC_DEFINE_HASH(lnc_hash_sha256, "sha256", 32, 64, lnc_sha256, lnc_sha256_free);
 
 #endif 
 #endif

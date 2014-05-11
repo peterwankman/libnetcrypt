@@ -360,5 +360,3 @@ uint8_t *lnc_aes_dec_block(uint8_t *msg, uint8_t *key, int *status) {
 	lnc_aes_dec(context);
 	return lnc_aes_tochar(context, status);
 }
-
-lnc_symdef_t lnc_sym_aes128 = { "aes128", LNC_AES_BSIZE, LNC_AES_KSIZE, lnc_aes_enc_block, lnc_aes_dec_block };

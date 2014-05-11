@@ -27,4 +27,10 @@
 #define rotl(i, n) (((i) << (n)) | ((i) >> (32 - (n))))
 #define rotr(i, n) (((i) >> (n)) | ((i) << (32 - (n))))
 
+#define LNC_DEFINE_HASH(identifier, name, outsize, blocksize, hashfunc, freefunc) \
+	static lnc_hashdef_t identifier = { name, outsize, blocksize, hashfunc, freefunc };
+
+#define LNC_DEFINE_SYM(identifier, name, bsize, ksize, encfunc, decfunc) \
+	static lnc_symdef_t identifier = { name, bsize, ksize, encfunc, decfunc };
+
 #endif

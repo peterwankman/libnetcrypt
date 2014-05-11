@@ -24,6 +24,8 @@
 #ifndef CAST6_H_
 #define CAST6_H_
 
+#include "lnc_macros.h"
+
 void lnc_cast6_enc(lnc_cast6_ctx_t *context);
 void lnc_cast6_dec(lnc_cast6_ctx_t *context);
 void lnc_cast6_update(lnc_cast6_ctx_t *context, uint8_t *msg, uint8_t *key, int *status);
@@ -34,6 +36,6 @@ uint8_t *lnc_cast6_tochar(lnc_cast6_ctx_t context, int *status);
 uint8_t *lnc_cast6_enc_block(uint8_t *msg, uint8_t *key, int *status);
 uint8_t *lnc_cast6_dec_block(uint8_t *msg, uint8_t *key, int *status);
 
-void initconst(void);
+LNC_DEFINE_SYM(lnc_sym_cast6, "cast6", 16, 32, lnc_cast6_enc_block, lnc_cast6_dec_block);
 
 #endif

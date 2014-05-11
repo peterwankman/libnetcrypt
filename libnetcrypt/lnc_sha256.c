@@ -211,6 +211,4 @@ void lnc_sha256_free(lnc_hash_t *ctx) {
 	free(ctx->string);
 }
 
-lnc_hashdef_t lnc_def_sha256 = { "sha256", 32, 64, lnc_sha256, lnc_sha256_free };
-
 #endif

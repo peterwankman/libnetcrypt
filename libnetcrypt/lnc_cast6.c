@@ -253,5 +253,3 @@ uint8_t *lnc_cast6_dec_block(uint8_t *msg, uint8_t *key, int *status) {
 
 	return buf;
 }
-
-lnc_symdef_t lnc_sym_cast6 = { "cast6", 16, 32, lnc_cast6_enc_block, lnc_cast6_dec_block };

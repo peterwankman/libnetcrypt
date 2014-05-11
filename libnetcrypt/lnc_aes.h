@@ -53,4 +53,6 @@ uint8_t *lnc_aes_tochar(lnc_aes_ctx_t context, int *status);
 uint8_t *lnc_aes_enc_block(uint8_t *msg, uint8_t *key, int *status);
 uint8_t *lnc_aes_dec_block(uint8_t *msg, uint8_t *key, int *status);
 
+LNC_DEFINE_SYM(lnc_sym_aes, "aes", 16, 32, lnc_aes_enc_block, lnc_aes_dec_block);
+
 #endif

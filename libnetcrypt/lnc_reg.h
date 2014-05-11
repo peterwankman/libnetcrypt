@@ -26,10 +26,8 @@
 
 #include "lnc.h"
 
-int lnc_reg_sym_alg(char *name, size_t bsize, size_t ksize,
-	lnc_symfunc_t enc, lnc_symfunc_t dec);
-int lnc_reg_hash_alg(char *name, size_t outsize, size_t blocksize,
-	lnc_hashfunc_t hashfunc, lnc_freefunc_t freefunc);
+int lnc_reg_sym_alg(lnc_symdef_t def);
+int lnc_reg_hash_alg(lnc_hashdef_t def);
 void lnc_free_algs(void);
 void lnc_reg_builtin(void);
 void lnc_list_algs(void);

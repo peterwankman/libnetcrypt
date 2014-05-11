@@ -3,3 +3,16 @@
 *.user
 *.suo
 *.asc
+*.lib
+*.pdb
+*.ipch
+*.exe
+*.tlog
+*.obj
+*.log
+*.idb
+*.res
+*.rc
+*.manifest
+*.lastbuildstate
+*.ilk
