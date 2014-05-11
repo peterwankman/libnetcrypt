@@ -44,6 +44,7 @@
 #include "lnc_cast6.h"
 #include "lnc_dh.h"
 #include "lnc_error.h"
+#include "lnc_hmac.h"
 #include "lnc_proto.h"
 #include "lnc_rndart.h"
 #include "lnc_sha256.h"

@@ -47,7 +47,7 @@ void lnc_aes_enc(lnc_aes_ctx_t context);
 void lnc_aes_dec(lnc_aes_ctx_t context);
 void lnc_aes_update(lnc_aes_ctx_t *context, uint8_t *msg, uint8_t *key, int *status);
 void lnc_aes_init(lnc_aes_ctx_t *context, uint8_t *msg, uint8_t *key, int *status);
-void lnc_aes_free(lnc_aes_ctx_t context);
+void lnc_aes_free(lnc_aes_ctx_t *context);
 uint8_t *lnc_aes_tochar(lnc_aes_ctx_t context, int *status);
 
 uint8_t *lnc_aes_enc_block(uint8_t *msg, uint8_t *key, int *status);

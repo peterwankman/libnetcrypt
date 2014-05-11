@@ -32,8 +32,6 @@
 #include "lnc.h"
 #include "lnc_macros.h"
 
-/* #define rotr(x, n) ((x >> n) | (x << (32 - n))) */
-
 static const unsigned int K[64] = {
 	0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
 	0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
@@ -208,4 +206,11 @@ lnc_hash_t lnc_sha256(const uint8_t *in, const size_t insize) {
 
 	return out;
 }
+
+void lnc_sha256_free(lnc_hash_t *ctx) {
+	free(ctx->string);
+}
+
+lnc_hashdef_t lnc_def_sha256 = { "sha256", 32, 64, lnc_sha256, lnc_sha256_free };
+
 #endif

@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\shared\mem.h" />
+    <ClInclude Include="lnc_hmac.h" />
     <ClInclude Include="lnc_cast6.h" />
     <ClInclude Include="lnc_aes.h" />
     <ClInclude Include="lnc.h" />
@@ -42,6 +43,7 @@
     <ClCompile Include="lnc_aes.c" />
     <ClCompile Include="lnc_cast6.c" />
     <ClCompile Include="lnc_dh.c" />
+    <ClCompile Include="lnc_hmac.c" />
     <ClCompile Include="lnc_reg.c" />
     <ClCompile Include="lnc_rndart.c" />
     <ClCompile Include="lnc_error.c" />

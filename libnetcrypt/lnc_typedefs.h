@@ -60,19 +60,23 @@ typedef struct lnc_cast6_ctx {
 } lnc_cast6_ctx_t;
 
 typedef lnc_hash_t (*lnc_hashfunc_t)(const uint8_t*, const size_t);
+typedef void (*lnc_freefunc_t)(void*);
 typedef uint8_t* (*lnc_symfunc_t)(uint8_t*, uint8_t*, int*);
 
 typedef struct hashdef {
 	char *name;
 	size_t outsize;
-	lnc_hashfunc_t func;
+	size_t blocksize;
+	lnc_hashfunc_t hashfunc;
+	lnc_freefunc_t freefunc;
 } lnc_hashdef_t;
 
 typedef struct symdef {
 	char *name;
 	size_t bsize, ksize;
 	lnc_symfunc_t encfunc;
-	lnc_symfunc_t decfunc;	
+	lnc_symfunc_t decfunc;
+	lnc_freefunc_t freefunc;
 } lnc_symdef_t;
 
 #define LNC_FEATURE_ENCRYPT		0x00000001

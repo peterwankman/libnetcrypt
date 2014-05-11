@@ -74,7 +74,7 @@ int lnc_reg_sym_alg(char *name, size_t bsize, size_t ksize,
 	return LNC_OK;
 }
 
-int lnc_reg_hash_alg(char *name, size_t outsize, lnc_hashfunc_t func) {
+int lnc_reg_hash_alg(char *name, size_t outsize, size_t blocksize, lnc_hashfunc_t hashfunc, lnc_freefunc_t freefunc) {
 	lnc_hashdef_t *newblock;
 
 	if(lnc_alloc_hash_algs % PREALLOC_BLOCK == 0) {
@@ -91,7 +91,9 @@ int lnc_reg_hash_alg(char *name, size_t outsize, lnc_hashfunc_t func) {
 
 	strncpy(lnc_hash_algs[lnc_num_hash_algs].name, name, strlen(name) + 1);
 	lnc_hash_algs[lnc_num_hash_algs].outsize = outsize;
-	lnc_hash_algs[lnc_num_hash_algs].func = func;
+	lnc_hash_algs[lnc_num_hash_algs].blocksize = blocksize;
+	lnc_hash_algs[lnc_num_hash_algs].hashfunc = hashfunc;
+	lnc_hash_algs[lnc_num_hash_algs].freefunc = freefunc;
 	lnc_num_hash_algs++;
 
 	return LNC_OK;
@@ -108,6 +110,8 @@ void lnc_free_algs(void) {
 }
 
 void lnc_reg_builtin(void) {
+	int status;
+
 #ifdef WITH_AES
 	lnc_reg_sym_alg("aes128", LNC_AES_BSIZE, LNC_AES_KSIZE, lnc_aes_enc_block, lnc_aes_dec_block);
 #endif
@@ -115,8 +119,10 @@ void lnc_reg_builtin(void) {
 	lnc_reg_sym_alg("cast6", 16, 32, lnc_cast6_enc_block, lnc_cast6_dec_block);
 #endif
 #ifdef WITH_SHA256
-	lnc_reg_hash_alg("sha256", 32, lnc_sha256);
+	lnc_reg_hash_alg("sha256", 32, 64, lnc_sha256, lnc_sha256_free);
 #endif
+
+	lnc_hmac(lnc_hash_algs[0], "key", 3, "The quick brown fox jumps over the lazy dog", 43, &status);
 }
 
 void lnc_list_algs(void) {

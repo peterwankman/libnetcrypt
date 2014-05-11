@@ -132,7 +132,7 @@ static int sendcookie(lnc_sock_t *socket) {
 	}
 
 	free(enccookie);
-	lnc_aes_free(context);
+	lnc_aes_free(&context);
 	return LNC_OK;
 }
 
@@ -165,7 +165,7 @@ static int recvcookie(lnc_sock_t *socket) {
 		return status;
 
 	free(buf);
-	lnc_aes_free(context);
+	lnc_aes_free(&context);
 	return LNC_OK;
 }
 
@@ -359,12 +359,12 @@ int lnc_send(lnc_sock_t *socket, const uint8_t *data, const uint32_t len) {
 		
 		if(send(socket->s, encblock, LNC_AES_BSIZE, 0) != LNC_AES_BSIZE) {
 			free(encblock);
-			lnc_aes_free(context);
+			lnc_aes_free(&context);
 			free(padded);
 			return 0;
 		}
 
-		lnc_aes_free(context);
+		lnc_aes_free(&context);
 		memcpy(IV, encblock, LNC_AES_BSIZE);
 		free(encblock);
 
@@ -408,7 +408,7 @@ int lnc_recv(lnc_sock_t *socket, uint8_t **dst) {
 		if(status != LNC_OK)
 			return 0;
 
-		lnc_aes_free(context);
+		lnc_aes_free(&context);
 
 		lnc_xor_block(decblock, socket->cookie, LNC_AES_BSIZE);
 		lnc_xor_block(decblock, IV, LNC_AES_BSIZE);

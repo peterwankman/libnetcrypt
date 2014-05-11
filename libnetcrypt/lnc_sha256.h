@@ -28,6 +28,7 @@
 #define LNC_SHA256_H_
 
 #define lnc_clear_hash(h) free(h.string)
+void lnc_sha256_free(lnc_hash_t *ctx);
 lnc_hash_t lnc_sha256(const uint8_t *in, const size_t size);
 
 #endif 

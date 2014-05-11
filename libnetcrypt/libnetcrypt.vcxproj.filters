@@ -72,6 +72,9 @@
     <ClInclude Include="lnc_cast6_tables.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="lnc_hmac.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="lnc_error.c">
@@ -112,6 +115,9 @@
     </ClCompile>
     <ClCompile Include="lnc_cast6.c">
       <Filter>Source Files\symmetric</Filter>
+    </ClCompile>
+    <ClCompile Include="lnc_hmac.c">
+      <Filter>Source Files\hash</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

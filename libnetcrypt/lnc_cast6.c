@@ -21,7 +21,6 @@
  * 
  */
 
-
 #include "../shared/mem.h"
 
 #include "lnc.h"
@@ -188,10 +187,10 @@ void lnc_cast6_init(lnc_cast6_ctx_t *context, uint8_t *msg, uint8_t *key, int *s
 	context->state[3] = msg[12] << 24 | msg[13] << 16 | msg[14] << 8 | msg[15];
 }
 
-void lnc_cast6_free(lnc_cast6_ctx_t context) {
-	free(context.Km);
-	free(context.Kr);
-	free(context.state);
+void lnc_cast6_free(lnc_cast6_ctx_t *context) {
+	free(context->Km);
+	free(context->Kr);
+	free(context->state);
 }
 
 uint8_t *lnc_cast6_tochar(lnc_cast6_ctx_t ctx, int *status) {
@@ -235,7 +234,7 @@ uint8_t *lnc_cast6_enc_block(uint8_t *msg, uint8_t *key, int *status) {
 
 	lnc_cast6_enc(&ctx);
 	buf = lnc_cast6_tochar(ctx, status);
-	lnc_cast6_free(ctx);
+	lnc_cast6_free(&ctx);
 
 	return buf;
 }
@@ -250,65 +249,9 @@ uint8_t *lnc_cast6_dec_block(uint8_t *msg, uint8_t *key, int *status) {
 
 	lnc_cast6_dec(&ctx);
 	buf = lnc_cast6_tochar(ctx, status);
-	lnc_cast6_free(ctx);
+	lnc_cast6_free(&ctx);
 
 	return buf;
 }
 
-void initconst(void) {
-	int i, status;	
-	lnc_cast6_ctx_t ctx;
-
-	/*
-		0x2342bb9e, 0xfa38542c, 0x0af75647, 0xf29f615d,
-		0x00000000, 0x00000000, 0x00000000, 0x00000000
-			=> c842a089 72b43d20 836c91d1 b7530f6b
-
-		0x2342bb9e, 0xfa38542c, 0xbed0ac83, 0x940ac298,
-		0xbac77a77,	0x17942863, 0x00000000, 0x00000000
-
-		0x2342bb9e, 0xfa38542c, 0xbed0ac83, 0x940ac298,
-		0x8d7c47ce, 0x26490846, 0x1cc1b513, 0x7ae6b604
-			=> 4f6a2038 286897b9 c9870136 553317fa
-	*/
-
-	uint8_t key[] = {
-		0x23, 0x42, 0xbb, 0x9e,
-		0xfa, 0x38, 0x54, 0x2c,
-		0x0a, 0xf7, 0x56, 0x47,
-		0xf2, 0x9f, 0x61, 0x5d,
-		0x00, 0x00, 0x00, 0x00,
-		0x00, 0x00, 0x00, 0x00,
-		0x00, 0x00, 0x00, 0x00,
-		0x00, 0x00, 0x00, 0x00
-	};
-
-	uint8_t pt[] = { 
-		0, 0, 0, 0, 0, 0, 0, 0,
-		0, 0, 0, 0, 0, 0, 0, 0
-	};
-
-	uint8_t *ct;
-
-	lnc_cast6_init(&ctx, pt, key, &status);
-	lnc_cast6_enc(&ctx);
-	printf(" %08x %08x %08x %08x\n",
-		ctx.state[0], ctx.state[1], ctx.state[2], ctx.state[3]);
-	lnc_cast6_dec(&ctx);
-	printf(" %08x %08x %08x %08x\n",
-		ctx.state[0], ctx.state[1], ctx.state[2], ctx.state[3]);
-	lnc_cast6_free(ctx);
-
-	ct = lnc_cast6_enc_block(pt, key, &status);
-	if(status == LNC_OK) {
-		for(i = 0; i < 16; i++)
-			printf("%02x", ct[i]);
-		printf("\n");
-	}
-	ct = lnc_cast6_dec_block(ct, key, &status);
-	if(status == LNC_OK) {
-		for(i = 0; i < 16; i++)
-			printf("%02x", ct[i]);
-		printf("\n");
-	}
-}
+lnc_symdef_t lnc_sym_cast6 = { "cast6", 16, 32, lnc_cast6_enc_block, lnc_cast6_dec_block };
