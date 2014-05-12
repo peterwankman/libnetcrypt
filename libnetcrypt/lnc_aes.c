@@ -319,7 +319,7 @@ void *lnc_aes_init(uint8_t *msg, uint8_t *key, int *status) {
 
 	ctx->expkey = expand_key(int_key, status);
 	if(*status != LNC_OK)
-		return;
+		return NULL;
 
 	ctx->state = mkstate(msg, status);
 

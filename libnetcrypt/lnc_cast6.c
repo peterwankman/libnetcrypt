@@ -181,13 +181,13 @@ void *lnc_cast6_init(uint8_t *msg, uint8_t *key, int *status) {
 	expand_key(ctx, int_key, status);
 
 	if(*status != LNC_OK)
-		return;
+		return NULL;
 
 	if((ctx->state = malloc(4 * sizeof(uint32_t))) == NULL) {
 		free(ctx->Km);
 		free(ctx->Kr);
 		*status = LNC_ERR_MALLOC;
-		return;
+		return NULL;
 	}
 
 	ctx->state[0] = msg[ 0] << 24 | msg[ 1] << 16 | msg[ 2] << 8 | msg[ 3];
