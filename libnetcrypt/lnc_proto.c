@@ -232,9 +232,12 @@ int lnc_handshake_server(lnc_sock_t *socket, const lnc_key_t *key) {
 		return LNC_ERR_LTM;
 	}
 
-	sym_key = lnc_sha256(buf, bufsize);
+	sym_key = lnc_sha256(buf, bufsize, &ret);
 	mp_clear_multi(&client_key, &shared_key, NULL);
 	free(buf);
+
+	if(ret != LNC_OK)
+		return ret;
 
 	if((ret = insert_key(socket, sym_key)) != LNC_OK) {
 		lnc_clear_hash(sym_key);
@@ -315,8 +318,11 @@ int lnc_handshake_client(lnc_sock_t *socket, const lnc_key_t *key) {
 	mp_to_unsigned_bin(&shared_key, buf);
 	mp_clear_multi(&root, &modulus, &public_key, &server_key, &shared_key, NULL);
 
-	sym_key = lnc_sha256(buf, bufsize);
+	sym_key = lnc_sha256(buf, bufsize, &ret);
 	free(buf);
+
+	if(ret != LNC_OK)
+		return ret;
 
 	if((ret = insert_key(socket, sym_key)) != LNC_OK) {
 		lnc_clear_hash(sym_key);

@@ -100,13 +100,13 @@ void client(char *remote_addr, u_short port, lnc_key_t *key) {
 		printf("%d bytes.\n", rcvd);
 		printf("Data:    '%s'\n", buf);
 
-		ret = lnc_sha256(buf, rcvd - 1);
+		ret = lnc_sha256(buf, rcvd - 1, &status);
 		printf("SHA-256: %08x%08x%08x%08x%08x%08x%08x%08x\n",
 			ret.h0, ret.h1, ret.h2, ret.h3,
 			ret.h4, ret.h5, ret.h6, ret.h7);
 		lnc_clear_hash(ret);
 
-		ret = lnc_sha256((uint8_t*)TESTMSG, strlen(TESTMSG));
+		ret = lnc_sha256((uint8_t*)TESTMSG, strlen(TESTMSG), &status);
 		printf("TESTMSG: %08x%08x%08x%08x%08x%08x%08x%08x\n",
 			ret.h0, ret.h1, ret.h2, ret.h3,
 			ret.h4, ret.h5, ret.h6, ret.h7);

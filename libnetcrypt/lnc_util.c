@@ -119,7 +119,7 @@ uint8_t *lnc_hex2char(const char *in, size_t len) {
 	return out;
 }
 
-int lnc_salt_hash(const char *in, const size_t len, const uint8_t *salthex, char **hashout) {
+int lnc_salt_hash(const char *in, const size_t len, const uint8_t *salthex, char **hashout, int *status) {
 	lnc_hash_t hash;	
 	uint8_t *buf, *salt;
 	size_t slen = strlen(salthex) / 2;
@@ -127,12 +127,14 @@ int lnc_salt_hash(const char *in, const size_t len, const uint8_t *salthex, char
 
 	if((buf = malloc(slen + len)) == NULL) {
 		fprintf(stderr, "ERROR (util.c/lnc_salt_hash): malloc(slen + len) failed.\n");
+		*status = LNC_ERR_MALLOC;
 		return 0;
 	}
 
 	if((salt = lnc_hex2char(salthex, strlen(salthex))) == NULL) {
 		fprintf(stderr, "ERROR (util.c/lnc_salt_hash): lnc_hex2char(%s) failed.\n", salthex);
 		free(buf);
+		*status = LNC_ERR_MALLOC;
 		return 0;
 	}
 		
@@ -143,11 +145,15 @@ int lnc_salt_hash(const char *in, const size_t len, const uint8_t *salthex, char
 	for(i = slen; i < slen + len; i++)
 		buf[i] = in[i - slen];
 
-	hash = lnc_sha256(buf, len + slen);
+	hash = lnc_sha256(buf, len + slen, status);
 	free(buf);
+
+	if(*status != LNC_OK)
+		return 0;
 
 	if((*hashout = malloc(65)) == NULL) {
 		fprintf(stderr, "ERROR (util.c/lnc_salt_hash): malloc(hash) failed.\n");		
+		*status = LNC_ERR_MALLOC;
 		return 0;
 	}	
 	sprintf(*hashout, "%08x%08x%08x%08x%08x%08x%08x%08x", hash.h0, hash.h1, hash.h2, hash.h3, hash.h4, hash.h5, hash.h6, hash.h7);

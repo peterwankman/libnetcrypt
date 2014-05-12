@@ -45,7 +45,7 @@ lnc_symdef_t *lnc_asym_algs = NULL;
 size_t lnc_num_asym_algs = 0;
 size_t lnc_alloc_asym_algs = 0;
 
-int lnc_reg_sym_alg(lnc_symdef_t def) {
+int lnc_reg_sym_alg(const lnc_symdef_t def) {
 	lnc_symdef_t *newblock;
 
 	if(lnc_num_sym_algs % PREALLOC_BLOCK == 0) {
@@ -67,7 +67,7 @@ int lnc_reg_sym_alg(lnc_symdef_t def) {
 	return LNC_OK;
 }
 
-int lnc_reg_hash_alg(lnc_hashdef_t def) {
+int lnc_reg_hash_alg(const lnc_hashdef_t def) {
 	lnc_hashdef_t *newblock;
 
 	if(lnc_alloc_hash_algs % PREALLOC_BLOCK == 0) {
@@ -94,18 +94,19 @@ void lnc_free_algs(void) {
 	free(lnc_hash_algs);
 }
 
-void lnc_reg_builtin(void) {
+int lnc_reg_builtin(void) {
 	int status;
-
 #ifdef WITH_AES
-	lnc_reg_sym_alg(lnc_sym_aes);
+	if((status = lnc_reg_sym_alg(lnc_sym_aes)) != LNC_OK) return status;
 #endif
 #ifdef WITH_CAST6
-	lnc_reg_sym_alg(lnc_sym_cast6);
+	if((status = lnc_reg_sym_alg(lnc_sym_cast6)) != LNC_OK) return status;
 #endif
 #ifdef WITH_SHA256
-	lnc_reg_hash_alg(lnc_hash_sha256);
+	if((status = lnc_reg_hash_alg(lnc_hash_sha256)) != LNC_OK) return status;
 #endif
+
+	return status;
 }
 
 void lnc_list_algs(void) {

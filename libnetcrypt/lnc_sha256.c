@@ -43,9 +43,12 @@ static const unsigned int K[64] = {
 	0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
 };
 
-static uint8_t *statetochar(const lnc_hash_t in) {
+static uint8_t *statetochar(const lnc_hash_t in, int *status) {
 	uint8_t *out = malloc(32);
-	if(out == NULL) return NULL;
+	if(out == NULL) {
+		*status = LNC_ERR_MALLOC;
+		return NULL;
+	}
 	
 	out[0] = (in.h0 >> 24) & 0xff;
 	out[1] = (in.h0 >> 16) & 0xff;
@@ -131,7 +134,7 @@ static uint8_t *preprocess(const uint8_t *in, const size_t insize, const size_t 
 	return out;
 }
 
-static lnc_hash_t digest(const uint8_t *in, const size_t size) {
+static lnc_hash_t digest(const uint8_t *in, const size_t size, int *status) {
 	lnc_hash_t state;
 	unsigned int i, j, k;
 	unsigned int a, b, c, d, e, f, g, h;
@@ -190,18 +193,18 @@ static lnc_hash_t digest(const uint8_t *in, const size_t size) {
 		state.h7 += h;
 	}
 
-	state.string = statetochar(state);
+	state.string = statetochar(state, status);
 	state.size = 32;
 	return state;
 }
 
-lnc_hash_t lnc_sha256(const uint8_t *in, const size_t insize) {
+lnc_hash_t lnc_sha256(const uint8_t *in, const size_t insize, int *status) {
 	uint8_t *prep;
 	lnc_hash_t out;
 	size_t size = newsize(insize);
 
 	prep = preprocess(in, insize, size);
-	out = digest(prep, size);
+	out = digest(prep, size, status);
 	free(prep);
 
 	return out;

@@ -26,6 +26,6 @@
 #ifndef LNC_HMAC_H_
 #define LNC_HMAC_H_
 
-void lnc_hmac(const lnc_hashdef_t hdef, const uint8_t *key, const size_t klen, const uint8_t *msg, const size_t mlen, int *status);
+uint8_t *lnc_hmac(const lnc_hashdef_t hdef, const uint8_t *key, const size_t klen, const uint8_t *msg, const size_t mlen, int *status);
 
 #endif

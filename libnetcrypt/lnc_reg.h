@@ -26,10 +26,10 @@
 
 #include "lnc.h"
 
-int lnc_reg_sym_alg(lnc_symdef_t def);
-int lnc_reg_hash_alg(lnc_hashdef_t def);
+int lnc_reg_sym_alg(const lnc_symdef_t def);
+int lnc_reg_hash_alg(const lnc_hashdef_t def);
 void lnc_free_algs(void);
-void lnc_reg_builtin(void);
+int lnc_reg_builtin(void);
 void lnc_list_algs(void);
 
 #endif

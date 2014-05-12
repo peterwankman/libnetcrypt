@@ -59,7 +59,7 @@ typedef struct lnc_cast6_ctx {
 	uint32_t *state;
 } lnc_cast6_ctx_t;
 
-typedef lnc_hash_t (*lnc_hashfunc_t)(const uint8_t*, const size_t);
+typedef lnc_hash_t (*lnc_hashfunc_t)(const uint8_t*, const size_t, int*);
 typedef void (*lnc_freefunc_t)(void*);
 typedef uint8_t* (*lnc_symfunc_t)(uint8_t*, uint8_t*, int*);
 
