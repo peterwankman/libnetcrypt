@@ -210,7 +210,8 @@ lnc_hash_t lnc_sha256(const uint8_t *in, const size_t insize, int *status) {
 	return out;
 }
 
-void lnc_sha256_free(lnc_hash_t *ctx) {
+void lnc_sha256_free(void *in) {
+	lnc_hash_t *ctx = in;
 	free(ctx->string);
 }
 
