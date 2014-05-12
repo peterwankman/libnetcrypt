@@ -25,13 +25,13 @@
 #define LNC_PROTO_H_
 
 #define LNC_MAGIC		0xbaef00a5
-#define LNC_PROTO_VER	0x00000001
+#define LNC_PROTO_VER	0x00000002
 
 #define LNC_msg_NACK	0
 #define LNC_msg_ACK		1
 
 int lnc_handshake_server(lnc_sock_t *socket, const lnc_key_t *key);
-int lnc_handshake_client(lnc_sock_t *socket, const lnc_key_t *key);
+int lnc_handshake_client(lnc_sock_t *socket, const lnc_key_t *key, const uint32_t hashid, const uint32_t symid);
 int lnc_send(lnc_sock_t *socket, const uint8_t *data, const uint32_t len);
 int lnc_recv(lnc_sock_t *socket, uint8_t **dst);
 

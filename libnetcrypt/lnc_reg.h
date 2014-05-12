@@ -31,5 +31,7 @@ int lnc_reg_hash_alg(const lnc_hashdef_t def);
 void lnc_free_algs(void);
 int lnc_reg_builtin(void);
 void lnc_list_algs(void);
+lnc_hashdef_t *lnc_get_hash(const uint32_t ID, int *status);
+lnc_symdef_t *lnc_get_sym(const uint32_t ID, int *status);
 
 #endif

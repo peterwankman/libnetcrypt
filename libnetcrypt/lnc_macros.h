@@ -27,10 +27,35 @@
 #define rotl(i, n) (((i) << (n)) | ((i) >> (32 - (n))))
 #define rotr(i, n) (((i) >> (n)) | ((i) << (32 - (n))))
 
-#define LNC_DEFINE_HASH(identifier, name, outsize, blocksize, hashfunc, freefunc) \
-	static lnc_hashdef_t identifier = { name, outsize, blocksize, hashfunc, freefunc };
+#define LNC_DEFINE_HASH(identifier, name, ID, outsize, blocksize, hashfunc, freefunc) \
+	static lnc_hashdef_t identifier = { name, ID, outsize, blocksize, hashfunc, freefunc };
 
-#define LNC_DEFINE_SYM(identifier, name, bsize, ksize, encfunc, decfunc) \
-	static lnc_symdef_t identifier = { name, bsize, ksize, encfunc, decfunc };
+/*
+typedef struct symdef {
+	char *name;
+	uint32_t ID;
+	size_t bsize, ksize;
+	lnc_sym_blockfunc_t encblock;
+	lnc_sym_blockfunc_t decblock;
+
+	lnc_sym_func_t enc;
+	lnc_sym_func_t dec;
+	lnc_sym_updatefunc_t update;
+	lnc_sym_initfunc_t init;
+	lnc_sym_freefunc_t clear;
+	lnc_sym_charfunc_t tochar;
+
+	lnc_freefunc_t freefunc;
+} lnc_symdef_t;
+*/
+
+#define LNC_DEFINE_SYM(identifier, name, ID, bsize, ksize, encblock, decblock, enc, dec, update, init, clear, tochar) \
+	static lnc_symdef_t identifier = { \
+		name, ID, \
+		bsize, ksize, \
+		encblock, decblock, \
+		enc, dec, \
+		update, init, clear, tochar \
+	};
 
 #endif

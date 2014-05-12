@@ -47,6 +47,11 @@ size_t lnc_alloc_asym_algs = 0;
 
 int lnc_reg_sym_alg(const lnc_symdef_t def) {
 	lnc_symdef_t *newblock;
+	size_t i;
+
+	for(i = 0; i < lnc_num_sym_algs; i++)
+		if(def.ID == lnc_sym_algs[i].ID)
+			return LNC_ERR_VAL;
 
 	if(lnc_num_sym_algs % PREALLOC_BLOCK == 0) {
 		newblock = malloc((lnc_alloc_sym_algs + PREALLOC_BLOCK) * sizeof(lnc_symdef_t));
@@ -69,6 +74,11 @@ int lnc_reg_sym_alg(const lnc_symdef_t def) {
 
 int lnc_reg_hash_alg(const lnc_hashdef_t def) {
 	lnc_hashdef_t *newblock;
+	size_t i;
+
+	for(i = 0; i < lnc_num_hash_algs; i++)
+		if(def.ID == lnc_hash_algs[i].ID)
+			return LNC_ERR_VAL;
 
 	if(lnc_alloc_hash_algs % PREALLOC_BLOCK == 0) {
 		newblock = malloc((lnc_alloc_hash_algs + PREALLOC_BLOCK) * sizeof(lnc_hashdef_t));
@@ -104,9 +114,34 @@ int lnc_reg_builtin(void) {
 #endif
 #ifdef WITH_SHA256
 	if((status = lnc_reg_hash_alg(lnc_hash_sha256)) != LNC_OK) return status;
+	if((status = lnc_reg_hash_alg(lnc_hash_sha256)) != LNC_OK) return status;
 #endif
 
 	return status;
+}
+
+lnc_hashdef_t *lnc_get_hash(const uint32_t ID, int *status) {
+	size_t i;
+
+	*status = LNC_OK;
+	for(i = 0; i < lnc_num_hash_algs; i++)
+		if(lnc_hash_algs[i].ID == ID)
+			return lnc_hash_algs + i;
+
+	*status = LNC_ERR_UNK;
+	return NULL;
+}
+
+lnc_symdef_t *lnc_get_sym(const uint32_t ID, int *status) {
+	size_t i;
+
+	*status = LNC_OK;
+	for(i = 0; i < lnc_num_sym_algs; i++)
+		if(lnc_sym_algs[i].ID == ID)
+			return lnc_sym_algs + i;
+
+	*status = LNC_ERR_UNK;
+	return NULL;
 }
 
 void lnc_list_algs(void) {

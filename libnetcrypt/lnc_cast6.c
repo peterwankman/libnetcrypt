@@ -113,29 +113,32 @@ static void expand_key(lnc_cast6_ctx_t *context, uint32_t *key, int *status) {
 	*status = LNC_OK;
 }
 
-void lnc_cast6_enc(lnc_cast6_ctx_t *context) {
+void lnc_cast6_enc(void *context) {
+	lnc_cast6_ctx_t *ctx = context;
 	int i;
 
 	for(i = 0; i < 6; i++)
-		Q(context, i);
+		Q(ctx, i);
 	for(i = 6; i < 12; i++)
-		QBAR(context, i);
+		QBAR(ctx, i);
 }
 
-void lnc_cast6_dec(lnc_cast6_ctx_t *context) {
+void lnc_cast6_dec(void *context) {
+	lnc_cast6_ctx_t *ctx = context;
 	int i;
 
 	for(i = 11; i > 5; i--)
-		Q(context, i);
+		Q(ctx, i);
 	for(i = 5; i >= 0; i--)
-		QBAR(context, i);
+		QBAR(ctx, i);
 }
 
-void lnc_cast6_update(lnc_cast6_ctx_t *context, uint8_t *msg, uint8_t *key, int *status) {
+void lnc_cast6_update(void *context, uint8_t *msg, uint8_t *key, int *status) {
+	lnc_cast6_ctx_t *ctx = context;
 	uint32_t int_key[8];
 	if(key) {
-		free(context->Km);
-		free(context->Kr);
+		free(ctx->Km);
+		free(ctx->Kr);
 
 		int_key[0] = key[ 0] << 24 | key[ 1] << 16 | key[ 2] << 8 | key[ 3];
 		int_key[1] = key[ 4] << 24 | key[ 5] << 16 | key[ 6] << 8 | key[ 7];
@@ -146,19 +149,25 @@ void lnc_cast6_update(lnc_cast6_ctx_t *context, uint8_t *msg, uint8_t *key, int 
 		int_key[6] = key[24] << 24 | key[25] << 16 | key[26] << 8 | key[27];
 		int_key[7] = key[28] << 24 | key[29] << 16 | key[30] << 8 | key[31];
 
-		expand_key(context, int_key, status);
+		expand_key(ctx, int_key, status);
 	}
 
 	if(msg) {
-		context->state[0] = msg[ 0] << 24 | msg[ 1] << 16 | msg[ 2] << 8 | msg[ 3];
-		context->state[1] = msg[ 4] << 24 | msg[ 5] << 16 | msg[ 6] << 8 | msg[ 7];
-		context->state[2] = msg[ 8] << 24 | msg[ 9] << 16 | msg[10] << 8 | msg[11];
-		context->state[3] = msg[12] << 24 | msg[13] << 16 | msg[14] << 8 | msg[15];
+		ctx->state[0] = msg[ 0] << 24 | msg[ 1] << 16 | msg[ 2] << 8 | msg[ 3];
+		ctx->state[1] = msg[ 4] << 24 | msg[ 5] << 16 | msg[ 6] << 8 | msg[ 7];
+		ctx->state[2] = msg[ 8] << 24 | msg[ 9] << 16 | msg[10] << 8 | msg[11];
+		ctx->state[3] = msg[12] << 24 | msg[13] << 16 | msg[14] << 8 | msg[15];
 	}
 }
 
-void lnc_cast6_init(lnc_cast6_ctx_t *context, uint8_t *msg, uint8_t *key, int *status) {
+void lnc_cast6_init(void **context, uint8_t *msg, uint8_t *key, int *status) {
+	lnc_cast6_ctx_t *ctx = malloc(sizeof(lnc_cast6_ctx_t));
 	uint32_t int_key[8];
+
+	if(!ctx) {
+		*status = LNC_ERR_MALLOC;
+		return;
+	}
 
 	int_key[0] = key[ 0] << 24 | key[ 1] << 16 | key[ 2] << 8 | key[ 3];
 	int_key[1] = key[ 4] << 24 | key[ 5] << 16 | key[ 6] << 8 | key[ 7];
@@ -169,87 +178,93 @@ void lnc_cast6_init(lnc_cast6_ctx_t *context, uint8_t *msg, uint8_t *key, int *s
 	int_key[6] = key[24] << 24 | key[25] << 16 | key[26] << 8 | key[27];
 	int_key[7] = key[28] << 24 | key[29] << 16 | key[30] << 8 | key[31];
 
-	expand_key(context, int_key, status);
+	expand_key(ctx, int_key, status);
 
 	if(*status != LNC_OK)
 		return;
 
-	if((context->state = malloc(4 * sizeof(uint32_t))) == NULL) {
-		free(context->Km);
-		free(context->Kr);
+	if((ctx->state = malloc(4 * sizeof(uint32_t))) == NULL) {
+		free(ctx->Km);
+		free(ctx->Kr);
 		*status = LNC_ERR_MALLOC;
 		return;
 	}
 
-	context->state[0] = msg[ 0] << 24 | msg[ 1] << 16 | msg[ 2] << 8 | msg[ 3];
-	context->state[1] = msg[ 4] << 24 | msg[ 5] << 16 | msg[ 6] << 8 | msg[ 7];
-	context->state[2] = msg[ 8] << 24 | msg[ 9] << 16 | msg[10] << 8 | msg[11];
-	context->state[3] = msg[12] << 24 | msg[13] << 16 | msg[14] << 8 | msg[15];
+	ctx->state[0] = msg[ 0] << 24 | msg[ 1] << 16 | msg[ 2] << 8 | msg[ 3];
+	ctx->state[1] = msg[ 4] << 24 | msg[ 5] << 16 | msg[ 6] << 8 | msg[ 7];
+	ctx->state[2] = msg[ 8] << 24 | msg[ 9] << 16 | msg[10] << 8 | msg[11];
+	ctx->state[3] = msg[12] << 24 | msg[13] << 16 | msg[14] << 8 | msg[15];
+
+	*context = ctx;
 }
 
-void lnc_cast6_free(lnc_cast6_ctx_t *context) {
-	free(context->Km);
-	free(context->Kr);
-	free(context->state);
+void lnc_cast6_free(void *context) {
+	lnc_cast6_ctx_t *ctx = context;
+	free(ctx->Km);
+	free(ctx->Kr);
+	free(ctx->state);
+	free(ctx);
 }
 
-uint8_t *lnc_cast6_tochar(lnc_cast6_ctx_t ctx, int *status) {
+uint8_t *lnc_cast6_tochar(void *context, int *status) {
+	lnc_cast6_ctx_t *ctx = context;
+
 	uint8_t *out = malloc(16);
 	if(out == NULL) {
 		*status = LNC_ERR_MALLOC;
 		return NULL;
 	}
 
-	out[ 0] = byte(ctx.state[0], 0);
-	out[ 1] = byte(ctx.state[0], 1);
-	out[ 2] = byte(ctx.state[0], 2);
-	out[ 3] = byte(ctx.state[0], 3);
+	out[ 0] = byte(ctx->state[0], 0);
+	out[ 1] = byte(ctx->state[0], 1);
+	out[ 2] = byte(ctx->state[0], 2);
+	out[ 3] = byte(ctx->state[0], 3);
 
-	out[ 4] = byte(ctx.state[1], 0);
-	out[ 5] = byte(ctx.state[1], 1);
-	out[ 6] = byte(ctx.state[1], 2);
-	out[ 7] = byte(ctx.state[1], 3);
+	out[ 4] = byte(ctx->state[1], 0);
+	out[ 5] = byte(ctx->state[1], 1);
+	out[ 6] = byte(ctx->state[1], 2);
+	out[ 7] = byte(ctx->state[1], 3);
 
-	out[ 8] = byte(ctx.state[2], 0);
-	out[ 9] = byte(ctx.state[2], 1);
-	out[10] = byte(ctx.state[2], 2);
-	out[11] = byte(ctx.state[2], 3);
+	out[ 8] = byte(ctx->state[2], 0);
+	out[ 9] = byte(ctx->state[2], 1);
+	out[10] = byte(ctx->state[2], 2);
+	out[11] = byte(ctx->state[2], 3);
 
-	out[12] = byte(ctx.state[3], 0);
-	out[13] = byte(ctx.state[3], 1);
-	out[14] = byte(ctx.state[3], 2);
-	out[15] = byte(ctx.state[3], 3);
+	out[12] = byte(ctx->state[3], 0);
+	out[13] = byte(ctx->state[3], 1);
+	out[14] = byte(ctx->state[3], 2);
+	out[15] = byte(ctx->state[3], 3);
 
 	*status = LNC_OK;
 	return out;
 }
 
 uint8_t *lnc_cast6_enc_block(uint8_t *msg, uint8_t *key, int *status) {
-	lnc_cast6_ctx_t ctx;
+	lnc_cast6_ctx_t *ctx;
 	uint8_t *buf;
 
 	lnc_cast6_init(&ctx, msg, key, status);
 	if(*status != LNC_OK)
 		return NULL;
 
-	lnc_cast6_enc(&ctx);
+	lnc_cast6_enc(ctx);
 	buf = lnc_cast6_tochar(ctx, status);
-	lnc_cast6_free(&ctx);
+	lnc_cast6_free(ctx);
 
 	return buf;
 }
 
 uint8_t *lnc_cast6_dec_block(uint8_t *msg, uint8_t *key, int *status) {
-	lnc_cast6_ctx_t ctx;
+	lnc_cast6_ctx_t *ctx;
 	uint8_t *buf;
 
 	lnc_cast6_init(&ctx, msg, key, status);
 	if(*status != LNC_OK)
 		return NULL;
 
-	lnc_cast6_dec(&ctx);
+	lnc_cast6_dec(ctx);
 	buf = lnc_cast6_tochar(ctx, status);
-	lnc_cast6_free(&ctx);
+	lnc_cast6_free(ctx);
 
 	return buf;
 }

@@ -43,16 +43,16 @@
 #define LNC_AES_BSIZE (Nb * 4)
 #define LNC_AES_KSIZE (Nk * 4)
 
-void lnc_aes_enc(lnc_aes_ctx_t context);
-void lnc_aes_dec(lnc_aes_ctx_t context);
-void lnc_aes_update(lnc_aes_ctx_t *context, uint8_t *msg, uint8_t *key, int *status);
-void lnc_aes_init(lnc_aes_ctx_t *context, uint8_t *msg, uint8_t *key, int *status);
-void lnc_aes_free(lnc_aes_ctx_t *context);
-uint8_t *lnc_aes_tochar(lnc_aes_ctx_t context, int *status);
+void lnc_aes_enc(void *context);
+void lnc_aes_dec(void *context);
+void lnc_aes_update(void *context, uint8_t *msg, uint8_t *key, int *status);
+void lnc_aes_init(void *context, uint8_t *msg, uint8_t *key, int *status);
+void lnc_aes_free(void *context);
+uint8_t *lnc_aes_tochar(void *context, int *status);
 
 uint8_t *lnc_aes_enc_block(uint8_t *msg, uint8_t *key, int *status);
 uint8_t *lnc_aes_dec_block(uint8_t *msg, uint8_t *key, int *status);
 
-LNC_DEFINE_SYM(lnc_sym_aes, "aes", 16, 32, lnc_aes_enc_block, lnc_aes_dec_block);
+LNC_DEFINE_SYM(lnc_sym_aes, "AES", 0x383a1d45, 16, 32, lnc_aes_enc_block, lnc_aes_dec_block, lnc_aes_enc, lnc_aes_dec, lnc_aes_update, lnc_aes_init, lnc_aes_free, lnc_aes_tochar);
 
 #endif

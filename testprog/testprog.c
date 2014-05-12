@@ -55,7 +55,7 @@ void server(u_short port, lnc_key_t *key) {
 		if((rndart = lnc_rndart(accsock->sym_key, 16, &status)) == NULL) {
 			lnc_perror(status, "ERROR (rndart)");
 		} else {
-			lnc_print_rndart(rndart, "AES", 256);
+			lnc_print_rndart(rndart, accsock->symdef->name, accsock->symdef->ksize * 8);
 			free(rndart);
 		}
 
@@ -88,7 +88,7 @@ void client(char *remote_addr, u_short port, lnc_key_t *key) {
 	if((rndart = lnc_rndart(socket->sym_key, 16, &status)) == NULL) {
 		lnc_perror(status, "ERROR (rndart)");
 	} else {
-		lnc_print_rndart(rndart, "AES", 256);
+		lnc_print_rndart(rndart, socket->symdef->name, socket->symdef->ksize * 8);
 		free(rndart);
 	}
 

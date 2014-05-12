@@ -101,11 +101,11 @@ int lnc_cbc_update_ctx(lnc_moo_ctx_t *context, uint8_t *intext, uint32_t len, in
 	if(context->fill == context->cipher.bsize) {
 		if(context->mode == MODE_ENC) {
 			lnc_xor_block(context->intext, context->data, context->cipher.bsize);
-			buf = context->cipher.encfunc(context->intext, context->key, status);
+			buf = context->cipher.encblock(context->intext, context->key, status);
 			memcpy(context->outtext, buf, context->cipher.bsize);
 			memcpy(context->data, buf, context->cipher.bsize);
 		} else if(context->mode == MODE_DEC) {
-			buf = context->cipher.decfunc(context->intext, context->key, status);
+			buf = context->cipher.decblock(context->intext, context->key, status);
 			lnc_xor_block(buf, context->data, context->cipher.bsize);
 			memcpy(context->outtext, buf, context->cipher.bsize);
 			memcpy(context->data, context->intext, context->cipher.bsize);

@@ -26,16 +26,16 @@
 
 #include "lnc_macros.h"
 
-void lnc_cast6_enc(lnc_cast6_ctx_t *context);
-void lnc_cast6_dec(lnc_cast6_ctx_t *context);
-void lnc_cast6_update(lnc_cast6_ctx_t *context, uint8_t *msg, uint8_t *key, int *status);
-void lnc_cast6_init(lnc_cast6_ctx_t *context, uint8_t *msg, uint8_t *key, int *status);
-void lnc_cast6_free(lnc_cast6_ctx_t *context);
-uint8_t *lnc_cast6_tochar(lnc_cast6_ctx_t context, int *status);
+void lnc_cast6_enc(void *context);
+void lnc_cast6_dec(void *context);
+void lnc_cast6_update(void *context, uint8_t *msg, uint8_t *key, int *status);
+void lnc_cast6_init(void *context, uint8_t *msg, uint8_t *key, int *status);
+void lnc_cast6_free(void *context);
+uint8_t *lnc_cast6_tochar(void *context, int *status);
 
 uint8_t *lnc_cast6_enc_block(uint8_t *msg, uint8_t *key, int *status);
 uint8_t *lnc_cast6_dec_block(uint8_t *msg, uint8_t *key, int *status);
 
-LNC_DEFINE_SYM(lnc_sym_cast6, "cast6", 16, 32, lnc_cast6_enc_block, lnc_cast6_dec_block);
+LNC_DEFINE_SYM(lnc_sym_cast6, "CAST6", 0xb010180f, 16, 32, lnc_cast6_enc_block, lnc_cast6_dec_block, lnc_cast6_enc, lnc_cast6_dec, lnc_cast6_update, lnc_cast6_init, lnc_cast6_free, lnc_cast6_tochar);
 
 #endif

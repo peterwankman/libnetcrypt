@@ -90,33 +90,35 @@ static uint32_t get_real_len(uint8_t *in, uint32_t inlen) {
 }
 
 static int mkcookie(lnc_sock_t *socket) {
-	uint8_t *buf = malloc(LNC_AES_BSIZE);
+	size_t bsize = socket->symdef->bsize;
+	uint8_t *buf = malloc(bsize);
 
 	if(!buf)
 		return 0;
 
-	lnc_fill_random(buf, LNC_AES_BSIZE, NULL);
-	socket->cookie_size = LNC_AES_BSIZE;
+	lnc_fill_random(buf, bsize, NULL);
+	socket->cookie_size = bsize;
 	socket->cookie = buf;
-	return LNC_AES_BSIZE;
+	return bsize;
 }
 
 static int sendcookie(lnc_sock_t *socket) {
 	uint32_t bufsize;
-	lnc_aes_ctx_t context;
+	void *context;
 	char *enccookie;
 	int status;
+	lnc_symdef_t *symdef = socket->symdef;
 
 	if((bufsize = mkcookie(socket)) == 0)
 		return LNC_ERR_MALLOC;
 
-	lnc_aes_init(&context, socket->cookie, socket->sym_key, &status);
+	symdef->init(&context, socket->cookie, socket->sym_key, &status);
 	if(status != LNC_OK)
 		return status;
 
-	lnc_aes_enc(context);
+	symdef->enc(context);
 
-	enccookie = lnc_aes_tochar(context, &status);
+	enccookie = symdef->tochar(context, &status);
 	if(status != LNC_OK)
 		return status;
 
@@ -126,26 +128,27 @@ static int sendcookie(lnc_sock_t *socket) {
 		return LNC_ERR_WRITE;
 	}	
 
-	if(send(socket->s, enccookie, LNC_AES_BSIZE, 0) != LNC_AES_BSIZE) {
+	if(send(socket->s, enccookie, socket->symdef->bsize, 0) != socket->symdef->bsize) {
 		free(enccookie);
 		return LNC_ERR_WRITE;
 	}
 
 	free(enccookie);
-	lnc_aes_free(&context);
+	symdef->clear(context);
 	return LNC_OK;
 }
 
 static int recvcookie(lnc_sock_t *socket) {
+	lnc_symdef_t *symdef = socket->symdef;
 	uint32_t bufsize;
-	lnc_aes_ctx_t context;
+	void *context;
 	char *buf;
 	int status;
 
 	if(recv(socket->s, (char*)&bufsize, sizeof(bufsize), 0) != sizeof(bufsize)) return LNC_ERR_READ;
 	
 	bufsize = lnc_conv_endian(bufsize);
-	if(bufsize != LNC_AES_BSIZE) return LNC_ERR_PROTO;
+	if(bufsize != symdef->bsize) return LNC_ERR_PROTO;
 
 	socket->cookie_size = bufsize;
 	if((buf = malloc(bufsize)) == NULL) return LNC_ERR_MALLOC;
@@ -155,36 +158,50 @@ static int recvcookie(lnc_sock_t *socket) {
 		return LNC_ERR_READ;
 	}
 
-	lnc_aes_init(&context, buf, socket->sym_key, &status);
+	symdef->init(&context, buf, socket->sym_key, &status);
 	if(status != LNC_OK)
 		return status;
 
-	lnc_aes_dec(context);
-	socket->cookie = lnc_aes_tochar(context, &status);
+	symdef->dec(context);
+	socket->cookie = symdef->tochar(context, &status);
 	if(status != LNC_OK)
 		return status;
 
 	free(buf);
-	lnc_aes_free(&context);
+	symdef->clear(context);
 	return LNC_OK;
 }
 
 int lnc_handshake_server(lnc_sock_t *socket, const lnc_key_t *key) {
 	uint32_t magic = lnc_conv_endian(LNC_MAGIC), protover = lnc_conv_endian(LNC_PROTO_VER);
 	uint32_t recvint, ack = LNC_msg_ACK, nack = LNC_msg_NACK;
+	uint32_t hashid, symid;
+	lnc_hashdef_t *hashdef;
+	lnc_symdef_t *symdef;
 	lnc_hash_t sym_key;
-	int ret, bufsize;
+	int ret, bufsize, status;
 	char *buf;
 	SOCKET s = socket->s;
 	mp_int client_key, shared_key;
 
-	if(send(s, (char*)&magic, sizeof(magic), 0) != sizeof(magic)) return LNC_ERR_WRITE;
-	if(send(s, (char*)&protover, sizeof(protover), 0) != sizeof(protover)) return LNC_ERR_WRITE;
 	if(recv(s, (char*)&recvint, sizeof(recvint), 0) != sizeof(recvint)) goto nack;
 	if(recvint != magic) goto nack;
 	if(recv(s, (char*)&recvint, sizeof(recvint), 0) != sizeof(recvint)) goto nack;
 	if(recvint != protover) goto nack;
+
+	/* CHECK STATUS! */
+	if(recv(s, (char*)&hashid, sizeof(hashid), 0) != sizeof(hashid)) goto nack;
+	if((hashdef = lnc_get_hash(hashid, &status)) == NULL) goto nack;
+	socket->hashdef = hashdef;
+
+	if(recv(s, (char*)&symid, sizeof(symid), 0) != sizeof(symid)) goto nack;
+	if((symdef = lnc_get_sym(symid, &status)) == NULL) goto nack;
+	socket->symdef = symdef;
+
 	if(send(s, (char*)&ack, sizeof(ack), 0) != sizeof(ack)) return LNC_ERR_WRITE;
+
+	if(send(s, (char*)&magic, sizeof(magic), 0) != sizeof(magic)) return LNC_ERR_WRITE;
+	if(send(s, (char*)&protover, sizeof(protover), 0) != sizeof(protover)) return LNC_ERR_WRITE;	
 	if(sendmp(s, key->generator) != LNC_OK) return LNC_ERR_WRITE;
 	if(sendmp(s, key->modulus) != LNC_OK) return LNC_ERR_WRITE;
 	if(sendmp(s, key->public_key) != LNC_OK) return LNC_ERR_WRITE;
@@ -232,7 +249,7 @@ int lnc_handshake_server(lnc_sock_t *socket, const lnc_key_t *key) {
 		return LNC_ERR_LTM;
 	}
 
-	sym_key = lnc_sha256(buf, bufsize, &ret);
+	sym_key = hashdef->hashfunc(buf, bufsize, &ret);
 	mp_clear_multi(&client_key, &shared_key, NULL);
 	free(buf);
 
@@ -240,10 +257,10 @@ int lnc_handshake_server(lnc_sock_t *socket, const lnc_key_t *key) {
 		return ret;
 
 	if((ret = insert_key(socket, sym_key)) != LNC_OK) {
-		lnc_clear_hash(sym_key);
+		hashdef->freefunc(&sym_key);
 		return ret;
 	}
-	lnc_clear_hash(sym_key);
+	hashdef->freefunc(&sym_key);
 
 	return sendcookie(socket);
 nack:
@@ -251,23 +268,32 @@ nack:
 	return LNC_ERR_NACK;
 }
 
-int lnc_handshake_client(lnc_sock_t *socket, const lnc_key_t *key) {
+int lnc_handshake_client(lnc_sock_t *socket, const lnc_key_t *key, const uint32_t hashid, const uint32_t symid) {
 	uint32_t magic = lnc_conv_endian(LNC_MAGIC), protover = lnc_conv_endian(LNC_PROTO_VER);
 	uint32_t recvint, ack = LNC_msg_ACK, nack = LNC_msg_NACK;
 	SOCKET s = socket->s;
 	mp_int root, modulus, server_key, public_key, shared_key;
 	lnc_hash_t sym_key;
-	int bufsize, ret;
+	int bufsize, ret, status;
 	char *buf;
+
+	if((socket->symdef = lnc_get_sym(symid, &status)) == NULL)
+		return status;
+	if((socket->hashdef = lnc_get_hash(hashid, &status)) == NULL)
+		return status;
+
+	if(send(s, (char*)&magic, sizeof(magic), 0) != sizeof(magic)) return LNC_ERR_WRITE;
+	if(send(s, (char*)&protover, sizeof(protover), 0) != sizeof(protover)) return LNC_ERR_WRITE;
+	
+	if(send(s, (char*)&hashid, sizeof(hashid), 0) != sizeof(hashid)) return LNC_ERR_WRITE;
+	if(send(s, (char*)&symid, sizeof(symid), 0) != sizeof(symid)) return LNC_ERR_WRITE;
+	if(recv(s, (char*)&recvint, sizeof(recvint), 0) != sizeof(recvint)) return LNC_ERR_READ;
+	if(recvint != ack) return LNC_ERR_NACK;
 
 	if(recv(s, (char*)&recvint, sizeof(recvint), 0) != sizeof(recvint)) return LNC_ERR_READ;
 	if(recvint != magic) return LNC_ERR_PROTO;
 	if(recv(s, (char*)&recvint, sizeof(recvint), 0) != sizeof(recvint)) return LNC_ERR_READ;
 	if(recvint != protover) return LNC_ERR_PROTO;
-	if(send(s, (char*)&magic, sizeof(magic), 0) != sizeof(magic)) return LNC_ERR_WRITE;
-	if(send(s, (char*)&protover, sizeof(protover), 0) != sizeof(protover)) return LNC_ERR_WRITE;
-	if(recv(s, (char*)&recvint, sizeof(recvint), 0) != sizeof(recvint)) return LNC_ERR_READ;
-	if(recvint != ack) return LNC_ERR_NACK;
 
 	if(mp_init_multi(&root, &modulus, &server_key, &public_key, &shared_key, NULL) != MP_OKAY)
 		return LNC_ERR_LTM;
@@ -318,114 +344,128 @@ int lnc_handshake_client(lnc_sock_t *socket, const lnc_key_t *key) {
 	mp_to_unsigned_bin(&shared_key, buf);
 	mp_clear_multi(&root, &modulus, &public_key, &server_key, &shared_key, NULL);
 
-	sym_key = lnc_sha256(buf, bufsize, &ret);
+	sym_key = socket->hashdef->hashfunc(buf, bufsize, &ret);
 	free(buf);
 
 	if(ret != LNC_OK)
 		return ret;
 
 	if((ret = insert_key(socket, sym_key)) != LNC_OK) {
-		lnc_clear_hash(sym_key);
+		socket->hashdef->freefunc(&sym_key);
 		return ret;
 	}
-	lnc_clear_hash(sym_key);
+	socket->hashdef->freefunc(&sym_key);
 	
 	return recvcookie(socket);
 }
 
 /* change to allow for checking status */
 int lnc_send(lnc_sock_t *socket, const uint8_t *data, const uint32_t len) {
-	uint8_t IV[LNC_AES_BSIZE], *buf, *padded, *encblock;
+	lnc_symdef_t *symdef = socket->symdef;
+	size_t bsize = symdef->bsize;
+	uint8_t *IV, *buf, *padded, *encblock;
 	uint32_t padlen, nblocks, sendblocks, currblock = 1;
-	lnc_aes_ctx_t context;
+	void *context;
 	int status;
 
-	lnc_fill_random(IV, LNC_AES_BSIZE, NULL);
-	
-	if((buf = padded = lnc_pad(data, LNC_AES_BSIZE, len, &padlen)) == NULL)
+	if((IV = malloc(bsize)) == NULL)
 		return 0;
 
-	nblocks = padlen / LNC_AES_BSIZE + 1;
+	lnc_fill_random(IV, bsize, NULL);
+	
+	if((buf = padded = lnc_pad(data, bsize, len, &padlen)) == NULL)
+		return 0;
+
+	nblocks = padlen / bsize + 1;
 	sendblocks = lnc_conv_endian(nblocks);
 	send(socket->s, (char*)&sendblocks, sizeof(sendblocks), 0);
-	send(socket->s, IV, LNC_AES_BSIZE, 0);	
+	send(socket->s, IV, bsize, 0);	
 	
 	do {
-		lnc_xor_block(buf, IV, LNC_AES_BSIZE);
-		lnc_xor_block(buf, socket->cookie, LNC_AES_BSIZE);
+		lnc_xor_block(buf, IV, bsize);
+		lnc_xor_block(buf, socket->cookie, bsize);
 
-		lnc_aes_init(&context, buf, socket->sym_key, &status);
+		symdef->init(&context, buf, socket->sym_key, &status);
 		if(status != LNC_OK)
 			return 0;
 
-		lnc_aes_enc(context);
-		encblock = lnc_aes_tochar(context, &status);
+		symdef->enc(context);
+		encblock = symdef->tochar(context, &status);
 		if(status != LNC_OK)
 			return 0;
 		
-		if(send(socket->s, encblock, LNC_AES_BSIZE, 0) != LNC_AES_BSIZE) {
+		if(send(socket->s, encblock, bsize, 0) != bsize) {
 			free(encblock);
-			lnc_aes_free(&context);
+			symdef->clear(context);
 			free(padded);
 			return 0;
 		}
 
-		lnc_aes_free(&context);
-		memcpy(IV, encblock, LNC_AES_BSIZE);
+		symdef->clear(context);
+		memcpy(IV, encblock, bsize);
 		free(encblock);
 
-		buf += LNC_AES_BSIZE;
+		buf += bsize;
 		currblock += 1;
 	} while(currblock < nblocks);
-	free(padded);	
+	free(padded);
+	free(IV);
 
 	return nblocks;
 }
 
 /* ditto */
 int lnc_recv(lnc_sock_t *socket, uint8_t **dst) {
-	uint32_t recvlen, blockcnt = 1, ret;
-	uint8_t IV[LNC_AES_BSIZE], currblock[LNC_AES_BSIZE], *decblock, *dstbuf;
-	lnc_aes_ctx_t context;
+	lnc_symdef_t *symdef = socket->symdef;
+	size_t bsize = symdef->bsize;
+	uint32_t recvlen, blockcnt = 1, ret = 0;
+	uint8_t *IV, *currblock, *decblock, *dstbuf;
+	void *context;
 	int status;
+
+	if((IV = malloc(bsize)) == NULL)
+		return 0;
+
+	if((currblock = malloc(bsize)) == NULL)
+		goto freeiv;
 
 	recv(socket->s, (char*)&recvlen, sizeof(recvlen), 0);
 	recvlen = lnc_conv_endian(recvlen);
 
 	if(recvlen < 2)
-		return 0;
+		goto freecurr;
 
-	if((dstbuf = malloc(recvlen * (LNC_AES_BSIZE - 1))) == NULL)
-		return 0;
+	if((dstbuf = malloc(recvlen * (bsize - 1))) == NULL)
+		goto freecurr;
 
-	if(recv(socket->s, IV, LNC_AES_BSIZE, 0) != LNC_AES_BSIZE)
-		return 0;
+	if(recv(socket->s, IV, bsize, 0) != bsize)
+		goto freedst;
 
 	do {
-		if((ret = recv(socket->s, currblock, LNC_AES_BSIZE, 0)) != LNC_AES_BSIZE)
-			return 0;		
+		if((ret = recv(socket->s, currblock, bsize, 0)) != bsize)
+			goto freedst;
 
-		lnc_aes_init(&context, currblock, socket->sym_key, &status);
+		symdef->init(&context, currblock, socket->sym_key, &status);
 		if(status != LNC_OK)
-			return 0;
+			goto freedst;
 
-		lnc_aes_dec(context);
-		decblock = lnc_aes_tochar(context, &status);
+		symdef->dec(context);
+		decblock = symdef->tochar(context, &status);
 		if(status != LNC_OK)
-			return 0;
+			goto freedst;
 
-		lnc_aes_free(&context);
+		symdef->clear(context);
 
-		lnc_xor_block(decblock, socket->cookie, LNC_AES_BSIZE);
-		lnc_xor_block(decblock, IV, LNC_AES_BSIZE);
-		memcpy(dstbuf + (blockcnt - 1) * LNC_AES_BSIZE, decblock, LNC_AES_BSIZE);
-		memcpy(IV, currblock, LNC_AES_BSIZE);
+		lnc_xor_block(decblock, socket->cookie, bsize);
+		lnc_xor_block(decblock, IV, bsize);
+		memcpy(dstbuf + (blockcnt - 1) * bsize, decblock, bsize);
+		memcpy(IV, currblock, bsize);
 
 		free(decblock);	
 		blockcnt++;
 	} while(blockcnt < recvlen);
 
-	ret = get_real_len(dstbuf, (blockcnt - 1) * LNC_AES_BSIZE);
+	ret = get_real_len(dstbuf, (blockcnt - 1) * bsize);
 
 	if(ret) {
 		if((*dst = malloc(ret)) != NULL) {
@@ -434,7 +474,12 @@ int lnc_recv(lnc_sock_t *socket, uint8_t **dst) {
 			ret = 0;
 		}
 	}
-
+	
+freedst:
 	free(dstbuf);
+freecurr:
+	free(currblock);
+freeiv:
+	free(IV);
 	return ret;
 }

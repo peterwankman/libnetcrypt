@@ -148,7 +148,7 @@ lnc_sock_t *lnc_connect(const char *remote_addr, const u_short port, const lnc_k
 	ret->sym_key_size = 0;
 	ret->cookie = NULL;
 
-	if((i = lnc_handshake_client(ret, key)) != LNC_OK) {
+	if((i = lnc_handshake_client(ret, key, lnc_hash_sha256.ID, lnc_sym_cast6.ID)) != LNC_OK) { /* TEST VALUES! */
 		*status = i;
 		lnc_freesock(ret);
 		return NULL;

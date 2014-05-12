@@ -29,12 +29,6 @@
 #ifndef LNC_TYPEDEFS_H_
 #define LNC_TYPEDEFS_H_
 
-typedef struct lnc_conn {
-	SOCKET s;
-	uint8_t *sym_key, *cookie;
-	uint32_t sym_key_size, cookie_size;
-} lnc_sock_t;
-
 typedef struct hash {
 	uint32_t size;
 	uint32_t h0, h1, h2, h3, h4, h5, h6, h7;
@@ -61,10 +55,17 @@ typedef struct lnc_cast6_ctx {
 
 typedef lnc_hash_t (*lnc_hashfunc_t)(const uint8_t*, const size_t, int*);
 typedef void (*lnc_freefunc_t)(void*);
-typedef uint8_t* (*lnc_symfunc_t)(uint8_t*, uint8_t*, int*);
+
+typedef void (*lnc_sym_func_t)(void*);
+typedef uint8_t* (*lnc_sym_blockfunc_t)(uint8_t*, uint8_t*, int*);
+typedef void (*lnc_sym_updatefunc_t)(void*, uint8_t*, uint8_t*, int*);
+typedef void (*lnc_sym_initfunc_t)(void**, uint8_t*, uint8_t*, int*);
+typedef void (*lnc_sym_freefunc_t)(void*);
+typedef uint8_t* (*lnc_sym_charfunc_t)(void*, int*);
 
 typedef struct hashdef {
 	char *name;
+	uint32_t ID;
 	size_t outsize;
 	size_t blocksize;
 	lnc_hashfunc_t hashfunc;
@@ -73,10 +74,17 @@ typedef struct hashdef {
 
 typedef struct symdef {
 	char *name;
+	uint32_t ID;
 	size_t bsize, ksize;
-	lnc_symfunc_t encfunc;
-	lnc_symfunc_t decfunc;
-	lnc_freefunc_t freefunc;
+	lnc_sym_blockfunc_t encblock;
+	lnc_sym_blockfunc_t decblock;
+
+	lnc_sym_func_t enc;
+	lnc_sym_func_t dec;
+	lnc_sym_updatefunc_t update;
+	lnc_sym_initfunc_t init;
+	lnc_sym_freefunc_t clear;
+	lnc_sym_charfunc_t tochar;
 } lnc_symdef_t;
 
 #define LNC_FEATURE_ENCRYPT		0x00000001
@@ -86,7 +94,14 @@ typedef struct symdef {
 typedef struct asymdef {
 	char *name;
 	uint32_t features;
-
 } lnc_asymdef_t;
+
+typedef struct lnc_conn {
+	SOCKET s;
+	lnc_hashdef_t *hashdef;
+	lnc_symdef_t *symdef;
+	uint8_t *sym_key, *cookie;
+	uint32_t sym_key_size, cookie_size;
+} lnc_sock_t;
 
 #endif

@@ -105,6 +105,8 @@ char *lnc_strerror(const int lnc_errno) {
 			return alloc_and_copy("Remote side rejected transmission.");
 		case LNC_ERR_VAL:
 			return alloc_and_copy("Invalid value.");
+		case LNC_ERR_UNK:
+			return alloc_and_copy("Unknown algorithm.");
 	}
 
 	return alloc_and_copy("Unknown error code.");
