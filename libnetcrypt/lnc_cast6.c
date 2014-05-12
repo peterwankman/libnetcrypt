@@ -160,13 +160,13 @@ void lnc_cast6_update(void *context, uint8_t *msg, uint8_t *key, int *status) {
 	}
 }
 
-void lnc_cast6_init(void **context, uint8_t *msg, uint8_t *key, int *status) {
+void *lnc_cast6_init(uint8_t *msg, uint8_t *key, int *status) {
 	lnc_cast6_ctx_t *ctx = malloc(sizeof(lnc_cast6_ctx_t));
 	uint32_t int_key[8];
 
 	if(!ctx) {
 		*status = LNC_ERR_MALLOC;
-		return;
+		return NULL;
 	}
 
 	int_key[0] = key[ 0] << 24 | key[ 1] << 16 | key[ 2] << 8 | key[ 3];
@@ -195,7 +195,7 @@ void lnc_cast6_init(void **context, uint8_t *msg, uint8_t *key, int *status) {
 	ctx->state[2] = msg[ 8] << 24 | msg[ 9] << 16 | msg[10] << 8 | msg[11];
 	ctx->state[3] = msg[12] << 24 | msg[13] << 16 | msg[14] << 8 | msg[15];
 
-	*context = ctx;
+	return ctx;
 }
 
 void lnc_cast6_free(void *context) {
@@ -240,10 +240,9 @@ uint8_t *lnc_cast6_tochar(void *context, int *status) {
 }
 
 uint8_t *lnc_cast6_enc_block(uint8_t *msg, uint8_t *key, int *status) {
-	lnc_cast6_ctx_t *ctx;
+	lnc_cast6_ctx_t *ctx = lnc_cast6_init(msg, key, status);
 	uint8_t *buf;
 
-	lnc_cast6_init(&ctx, msg, key, status);
 	if(*status != LNC_OK)
 		return NULL;
 
@@ -255,10 +254,9 @@ uint8_t *lnc_cast6_enc_block(uint8_t *msg, uint8_t *key, int *status) {
 }
 
 uint8_t *lnc_cast6_dec_block(uint8_t *msg, uint8_t *key, int *status) {
-	lnc_cast6_ctx_t *ctx;
+	lnc_cast6_ctx_t *ctx = lnc_cast6_init(msg, key, status);
 	uint8_t *buf;
 
-	lnc_cast6_init(&ctx, msg, key, status);
 	if(*status != LNC_OK)
 		return NULL;
 

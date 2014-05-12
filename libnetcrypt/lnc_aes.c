@@ -301,10 +301,15 @@ void lnc_aes_update(void *context, uint8_t *msg, uint8_t *key, int *status) {
 	}
 }
 
-void lnc_aes_init(void **context, uint8_t *msg, uint8_t *key, int *status) {
+void *lnc_aes_init(uint8_t *msg, uint8_t *key, int *status) {
 	lnc_aes_ctx_t *ctx = malloc(sizeof(lnc_aes_ctx_t));
 	uint32_t int_key[Nk];
 	int i;
+
+	if(ctx == NULL) {
+		*status = LNC_ERR_MALLOC;
+		return NULL;
+	}
 	
 	for(i = 0; i < Nk; i++)
 		int_key[i] = key[i * 4] << 24 |
@@ -318,7 +323,7 @@ void lnc_aes_init(void **context, uint8_t *msg, uint8_t *key, int *status) {
 
 	ctx->state = mkstate(msg, status);
 
-	*context = ctx;
+	return ctx;
 }
 
 void lnc_aes_free(void *context) {
@@ -350,9 +355,8 @@ uint8_t *lnc_aes_tochar(void *context, int *status) {
 }
 
 uint8_t *lnc_aes_enc_block(uint8_t *msg, uint8_t *key, int *status) {
-	lnc_aes_ctx_t *context;
+	lnc_aes_ctx_t *context = lnc_aes_init(msg, key, status);
 
-	lnc_aes_init(&context, msg, key, status);
 	if(*status != LNC_OK)
 		return NULL;
 
@@ -361,9 +365,8 @@ uint8_t *lnc_aes_enc_block(uint8_t *msg, uint8_t *key, int *status) {
 }
 
 uint8_t *lnc_aes_dec_block(uint8_t *msg, uint8_t *key, int *status) {
-	lnc_aes_ctx_t *context;
+	lnc_aes_ctx_t *context = lnc_aes_init(msg, key, status);
 
-	lnc_aes_init(&context, msg, key, status);
 	if(*status != LNC_OK)
 		return NULL;
 

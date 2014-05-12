@@ -112,7 +112,7 @@ static int sendcookie(lnc_sock_t *socket) {
 	if((bufsize = mkcookie(socket)) == 0)
 		return LNC_ERR_MALLOC;
 
-	symdef->init(&context, socket->cookie, socket->sym_key, &status);
+	context = symdef->init(socket->cookie, socket->sym_key, &status);
 	if(status != LNC_OK)
 		return status;
 
@@ -158,7 +158,7 @@ static int recvcookie(lnc_sock_t *socket) {
 		return LNC_ERR_READ;
 	}
 
-	symdef->init(&context, buf, socket->sym_key, &status);
+	context = symdef->init(buf, socket->sym_key, &status);
 	if(status != LNC_OK)
 		return status;
 
@@ -385,7 +385,7 @@ int lnc_send(lnc_sock_t *socket, const uint8_t *data, const uint32_t len) {
 		lnc_xor_block(buf, IV, bsize);
 		lnc_xor_block(buf, socket->cookie, bsize);
 
-		symdef->init(&context, buf, socket->sym_key, &status);
+		context = symdef->init(buf, socket->sym_key, &status);
 		if(status != LNC_OK)
 			return 0;
 
@@ -445,7 +445,7 @@ int lnc_recv(lnc_sock_t *socket, uint8_t **dst) {
 		if((ret = recv(socket->s, currblock, bsize, 0)) != bsize)
 			goto freedst;
 
-		symdef->init(&context, currblock, socket->sym_key, &status);
+		context = symdef->init(currblock, socket->sym_key, &status);
 		if(status != LNC_OK)
 			goto freedst;
 

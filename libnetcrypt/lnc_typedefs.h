@@ -59,7 +59,7 @@ typedef void (*lnc_freefunc_t)(void*);
 typedef void (*lnc_sym_func_t)(void*);
 typedef uint8_t* (*lnc_sym_blockfunc_t)(uint8_t*, uint8_t*, int*);
 typedef void (*lnc_sym_updatefunc_t)(void*, uint8_t*, uint8_t*, int*);
-typedef void (*lnc_sym_initfunc_t)(void**, uint8_t*, uint8_t*, int*);
+typedef void* (*lnc_sym_initfunc_t)(uint8_t*, uint8_t*, int*);
 typedef void (*lnc_sym_freefunc_t)(void*);
 typedef uint8_t* (*lnc_sym_charfunc_t)(void*, int*);
 
