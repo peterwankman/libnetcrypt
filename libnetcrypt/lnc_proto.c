@@ -249,8 +249,6 @@ int lnc_handshake_server(lnc_sock_t *socket, const lnc_key_t *key) {
 	if(send(s, (char*)&magic, sizeof(magic), 0) != sizeof(magic)) return LNC_ERR_WRITE;
 	if(send(s, (char*)&protover, sizeof(protover), 0) != sizeof(protover)) return LNC_ERR_WRITE;	
 
-	socket->salt = 
-
 	if(sendmp(s, key->generator) != LNC_OK) return LNC_ERR_WRITE;
 	if(sendmp(s, key->modulus) != LNC_OK) return LNC_ERR_WRITE;
 	if(sendmp(s, key->public_key) != LNC_OK) return LNC_ERR_WRITE;

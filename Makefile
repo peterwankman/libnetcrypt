@@ -33,6 +33,7 @@ $(BIN)/libnetcrypt.a: $(BIN)/libtommath.a $(OBJ)/lnc_aes.o \
 $(OBJ)/lnc_cast6.o \
 $(OBJ)/lnc_dh.o \
 $(OBJ)/lnc_error.o \
+$(OBJ)/lnc_hmac.o \
 $(OBJ)/lnc_main.o \
 $(OBJ)/lnc_proto.o \
 $(OBJ)/lnc_reg.o \
@@ -51,6 +52,9 @@ $(OBJ)/lnc_dh.o: $(LIBSRC)/lnc_dh.c
 	$(CC) $(CFLAGS) -c -o $@ $^
 
 $(OBJ)/lnc_error.o: $(LIBSRC)/lnc_error.c
+	$(CC) $(CFLAGS) -c -o $@ $^
+
+$(OBJ)/lnc_hmac.o: $(LIBSRC)/lnc_hmac.c
 	$(CC) $(CFLAGS) -c -o $@ $^
 
 $(OBJ)/lnc_main.o: $(LIBSRC)/lnc_main.c
