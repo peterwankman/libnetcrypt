@@ -49,6 +49,7 @@ static uint8_t *statetochar(const lnc_hash_t in, int *status) {
 		*status = LNC_ERR_MALLOC;
 		return NULL;
 	}
+	*status = LNC_OK;
 	
 	out[0] = (in.h0 >> 24) & 0xff;
 	out[1] = (in.h0 >> 16) & 0xff;

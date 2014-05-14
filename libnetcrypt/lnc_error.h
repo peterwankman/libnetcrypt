@@ -43,6 +43,7 @@
 #define LNC_ERR_NACK	16
 #define LNC_ERR_VAL		17
 #define LNC_ERR_UNK		18
+#define LNC_ERR_AUTH	19
 
 char *lnc_strerror(const int lnc_errno);
 void lnc_perror(const int lnc_errno, const char *str);

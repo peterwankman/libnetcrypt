@@ -69,19 +69,6 @@ static int recvmp(SOCKET s, mp_int *mpi) {
 	return ret;
 }
 
-static int insert_key(lnc_sock_t *socket, lnc_hash_t key) {
-	char *buf = malloc(key.size);
-
-	if(!buf)
-		return LNC_ERR_MALLOC;
-
-	memcpy(buf, key.string, key.size);
-	socket->sym_key = buf;
-	socket->sym_key_size = key.size;
-	
-	return LNC_OK;
-}
-
 static uint32_t get_real_len(uint8_t *in, uint32_t inlen) {
 	while(!in[--inlen]);
 	if(in[inlen] == 0x80)
@@ -172,13 +159,72 @@ static int recvcookie(lnc_sock_t *socket) {
 	return LNC_OK;
 }
 
+static void derive_key(lnc_sock_t *socket, const uint8_t *input, const size_t insize, int *status) {
+	uint8_t *prk, *okm, *info;
+	lnc_hashdef_t *hdef = socket->hashdef;
+	lnc_symdef_t *sdef = socket->symdef;
+	size_t ksize = sdef->ksize;
+	size_t offs = 0;
+
+	uint32_t infoprotver = lnc_conv_endian(LNC_PROTO_VER);
+	uint32_t infohid = lnc_conv_endian((uint32_t)hdef->ID);
+	uint32_t infosid = lnc_conv_endian((uint32_t)sdef->ID);
+	uint32_t infoksize = lnc_conv_endian((uint32_t)sdef->ksize);
+	uint32_t infobsize = lnc_conv_endian((uint32_t)sdef->bsize);
+
+	int i;
+
+	info = malloc(
+		sizeof(infoprotver) +
+		sizeof(infohid) +
+		sizeof(infosid) +
+		sizeof(infoksize) +
+		sizeof(infobsize) +
+		strlen(hdef->name) +
+		strlen(sdef->name));
+
+	if(info == NULL) {
+		*status = LNC_ERR_MALLOC;
+		return;
+	}
+		
+	/* Maybe use some salt! */
+	prk = lnc_hkdf_extract(*hdef, "", 0, input, insize, status);
+	if(*status != LNC_OK) {
+		free(info);
+		return;
+	}
+
+#define addntox(n) \
+	do { \
+		memcpy(info + offs, &(n), sizeof(n)); \
+		offs += sizeof(n); \
+	} while(0)
+
+	addntox(infoprotver);
+	addntox(infohid);
+	addntox(infosid);
+	addntox(infoksize);
+	addntox(infobsize);
+	memcpy(info + offs, hdef->name, strlen(hdef->name));	offs += strlen(hdef->name);
+	memcpy(info + offs, sdef->name, strlen(sdef->name));	offs += strlen(sdef->name);
+
+	okm = lnc_hkdf_expand(*hdef, prk, hdef->outsize, info, 0, ksize, status);
+	free(prk);
+	free(info);
+
+	if(*status != LNC_OK)
+		return;
+
+	socket->sym_key = okm;
+}
+
 int lnc_handshake_server(lnc_sock_t *socket, const lnc_key_t *key) {
 	uint32_t magic = lnc_conv_endian(LNC_MAGIC), protover = lnc_conv_endian(LNC_PROTO_VER);
-	uint32_t recvint, ack = LNC_msg_ACK, nack = LNC_msg_NACK;
+	uint32_t recvint, ack = LNC_MSG_ACK, nack = LNC_MSG_NACK;
 	uint32_t hashid, symid;
 	lnc_hashdef_t *hashdef;
 	lnc_symdef_t *symdef;
-	lnc_hash_t sym_key;
 	int ret, bufsize, status;
 	char *buf;
 	SOCKET s = socket->s;
@@ -202,6 +248,9 @@ int lnc_handshake_server(lnc_sock_t *socket, const lnc_key_t *key) {
 
 	if(send(s, (char*)&magic, sizeof(magic), 0) != sizeof(magic)) return LNC_ERR_WRITE;
 	if(send(s, (char*)&protover, sizeof(protover), 0) != sizeof(protover)) return LNC_ERR_WRITE;	
+
+	socket->salt = 
+
 	if(sendmp(s, key->generator) != LNC_OK) return LNC_ERR_WRITE;
 	if(sendmp(s, key->modulus) != LNC_OK) return LNC_ERR_WRITE;
 	if(sendmp(s, key->public_key) != LNC_OK) return LNC_ERR_WRITE;
@@ -249,18 +298,11 @@ int lnc_handshake_server(lnc_sock_t *socket, const lnc_key_t *key) {
 		return LNC_ERR_LTM;
 	}
 
-	sym_key = hashdef->hashfunc(buf, bufsize, &ret);
-	mp_clear_multi(&client_key, &shared_key, NULL);
+	derive_key(socket, buf, bufsize, &status);
 	free(buf);
 
-	if(ret != LNC_OK)
-		return ret;
-
-	if((ret = insert_key(socket, sym_key)) != LNC_OK) {
-		hashdef->freefunc(&sym_key);
-		return ret;
-	}
-	hashdef->freefunc(&sym_key);
+	if(status != LNC_OK)
+		return status;
 
 	return sendcookie(socket);
 nack:
@@ -270,10 +312,9 @@ nack:
 
 int lnc_handshake_client(lnc_sock_t *socket, const lnc_key_t *key, const uint32_t hashid, const uint32_t symid) {
 	uint32_t magic = lnc_conv_endian(LNC_MAGIC), protover = lnc_conv_endian(LNC_PROTO_VER);
-	uint32_t recvint, ack = LNC_msg_ACK, nack = LNC_msg_NACK;
+	uint32_t recvint, ack = LNC_MSG_ACK, nack = LNC_MSG_NACK;
 	SOCKET s = socket->s;
 	mp_int root, modulus, server_key, public_key, shared_key;
-	lnc_hash_t sym_key;
 	int bufsize, ret, status;
 	char *buf;
 
@@ -344,18 +385,12 @@ int lnc_handshake_client(lnc_sock_t *socket, const lnc_key_t *key, const uint32_
 	mp_to_unsigned_bin(&shared_key, buf);
 	mp_clear_multi(&root, &modulus, &public_key, &server_key, &shared_key, NULL);
 
-	sym_key = socket->hashdef->hashfunc(buf, bufsize, &ret);
+	derive_key(socket, buf, bufsize, &status);
 	free(buf);
 
-	if(ret != LNC_OK)
-		return ret;
+	if(status != LNC_OK)
+		return status;
 
-	if((ret = insert_key(socket, sym_key)) != LNC_OK) {
-		socket->hashdef->freefunc(&sym_key);
-		return ret;
-	}
-	socket->hashdef->freefunc(&sym_key);
-	
 	return recvcookie(socket);
 }
 

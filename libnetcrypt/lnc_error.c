@@ -107,6 +107,8 @@ char *lnc_strerror(const int lnc_errno) {
 			return alloc_and_copy("Invalid value.");
 		case LNC_ERR_UNK:
 			return alloc_and_copy("Unknown algorithm.");
+		case LNC_ERR_AUTH:
+			return alloc_and_copy("Authentication failed.");
 	}
 
 	return alloc_and_copy("Unknown error code.");

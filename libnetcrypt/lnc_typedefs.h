@@ -96,6 +96,12 @@ typedef struct asymdef {
 	uint32_t features;
 } lnc_asymdef_t;
 
+typedef struct lnc_hmac_ctx {
+	lnc_hashdef_t hashdef;
+	uint8_t *data, *key;
+	size_t datalen, keylen;
+} lnc_hmac_ctx_t;
+
 typedef struct lnc_conn {
 	SOCKET s;
 	lnc_hashdef_t *hashdef;
