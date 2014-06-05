@@ -75,7 +75,7 @@ void client(char *remote_addr, u_short port, lnc_key_t *key) {
 	lnc_sock_t *socket;
 	lnc_hash_t ret;	
 	uint8_t *buf, *rndart;
-	int status, rcvd;
+	int status, rcvd, i;
 
 	printf("Connecting to %s:%d... ", remote_addr, port);
 	socket = lnc_connect(remote_addr, port, key, &status);
@@ -99,16 +99,18 @@ void client(char *remote_addr, u_short port, lnc_key_t *key) {
 		printf("Data:    '%s'\n", buf);
 
 		ret = lnc_sha256(buf, rcvd - 1, &status);
-		printf("SHA-256: %08x%08x%08x%08x%08x%08x%08x%08x\n",
-			ret.h0, ret.h1, ret.h2, ret.h3,
-			ret.h4, ret.h5, ret.h6, ret.h7);
-		lnc_clear_hash(ret);
+		printf("SHA-256: ");
+		for(i = 0; i < ret.size; i++)
+			printf("%02x", ret.string[i]);
+		printf("\n");	
+		lnc_sha256_free(&ret);
 
 		ret = lnc_sha256((uint8_t*)TESTMSG, strlen(TESTMSG), &status);
-		printf("TESTMSG: %08x%08x%08x%08x%08x%08x%08x%08x\n",
-			ret.h0, ret.h1, ret.h2, ret.h3,
-			ret.h4, ret.h5, ret.h6, ret.h7);
-		lnc_clear_hash(ret);
+		printf("TESTMSG: ");
+		for(i = 0; i < ret.size; i++)
+			printf("%02x", ret.string[i]);
+		printf("\n");	
+		lnc_sha256_free(&ret);
 		free(buf);
 	} else 
 		printf("Failed.\n");
@@ -156,6 +158,8 @@ int main(int argc, char **argv) {
 	char *remote_addr = NULL, *keyfile = NULL;
 	lnc_key_t *key;
 	
+	uint8_t *hmac;
+
 	while((c = getopt(argc, argv, "c:k:lp:s:")) != -1) {
 		switch(c) {
 			case 'c': remote_addr = optarg;	break;
@@ -208,7 +212,11 @@ int main(int argc, char **argv) {
 	lnc_key_to_file_new(key, "keytest.asc", &status);
 	if(status != LNC_OK)
 		lnc_perror(status, "KTF");
-
+	free(lnc_key_from_file_new("keytest.asc", &status));
+	if(status != LNC_OK)
+		lnc_perror(status, "KTF");
+	/* ************************ */
+	
 	if(remote_addr)
 		client(remote_addr, portnum, key);
 	else if(listen)

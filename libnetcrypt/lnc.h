@@ -24,6 +24,10 @@
 #ifndef LNC_H_
 #define LNC_H_
 
+#ifdef U_S_A_U_S_A_U_S_A
+#define WITH_MD5
+#endif
+
 #ifdef _MSC_VER
 #include <WinSock2.h>
 #else
@@ -45,6 +49,7 @@
 #include "lnc_dh.h"
 #include "lnc_error.h"
 #include "lnc_hmac.h"
+#include "lnc_md5.h"
 #include "lnc_proto.h"
 #include "lnc_reg.h"
 #include "lnc_rndart.h"

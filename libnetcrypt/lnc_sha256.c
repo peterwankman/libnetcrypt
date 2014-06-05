@@ -45,44 +45,20 @@ static const unsigned int K[64] = {
 
 static uint8_t *statetochar(const lnc_hash_t in, int *status) {
 	uint8_t *out = malloc(32);
+	int i;
+
 	if(out == NULL) {
 		*status = LNC_ERR_MALLOC;
 		return NULL;
 	}
 	*status = LNC_OK;
 	
-	out[0] = (in.h0 >> 24) & 0xff;
-	out[1] = (in.h0 >> 16) & 0xff;
-	out[2] = (in.h0 >> 8) & 0xff;
-	out[3] = in.h0 & 0xff;
-	out[4] = (in.h1 >> 24) & 0xff;
-	out[5] = (in.h1 >> 16) & 0xff;
-	out[6] = (in.h1 >> 8) & 0xff;
-	out[7] = in.h1 & 0xff;
-	out[8] = (in.h2 >> 24) & 0xff;
-	out[9] = (in.h2 >> 16) & 0xff;
-	out[10] = (in.h2 >> 8) & 0xff;
-	out[11] = in.h2 & 0xff;
-	out[12] = (in.h3 >> 24) & 0xff;
-	out[13] = (in.h3 >> 16) & 0xff;
-	out[14] = (in.h3 >> 8) & 0xff;
-	out[15] = in.h3 & 0xff;
-	out[16] = (in.h4 >> 24) & 0xff;
-	out[17] = (in.h4 >> 16) & 0xff;
-	out[18] = (in.h4 >> 8) & 0xff;
-	out[19] = in.h4 & 0xff;
-	out[20] = (in.h5 >> 24) & 0xff;
-	out[21] = (in.h5 >> 16) & 0xff;
-	out[22] = (in.h5 >> 8) & 0xff;
-	out[23] = in.h5 & 0xff;
-	out[24] = (in.h6 >> 24) & 0xff;
-	out[25] = (in.h6 >> 16) & 0xff;
-	out[26] = (in.h6 >> 8) & 0xff;
-	out[27] = in.h6 & 0xff;
-	out[28] = (in.h7 >> 24) & 0xff;
-	out[29] = (in.h7 >> 16) & 0xff;
-	out[30] = (in.h7 >> 8) & 0xff;
-	out[31] = in.h7 & 0xff;
+	for(i = 0; i < 8; i++) {
+		out[i * 4 + 0] = (in.h[i] >> 24) & 0xff;
+		out[i * 4 + 1] = (in.h[i] >> 16) & 0xff;
+		out[i * 4 + 2] = (in.h[i] >> 8) & 0xff;
+		out[i * 4 + 3] = in.h[i] & 0xff;
+	}
 
 	return out;
 }
@@ -90,14 +66,18 @@ static uint8_t *statetochar(const lnc_hash_t in, int *status) {
 static lnc_hash_t sha256init(void) {
 	lnc_hash_t out;
 
-	out.h0 = 0x6a09e667;
-	out.h1 = 0xbb67ae85;
-	out.h2 = 0x3c6ef372;
-	out.h3 = 0xa54ff53a;
-	out.h4 = 0x510e527f;
-	out.h5 = 0x9b05688c;
-	out.h6 = 0x1f83d9ab;
-	out.h7 = 0x5be0cd19;
+	out.h = malloc(8 * sizeof(uint32_t));
+	if(out.h == NULL)
+		return out;
+
+	out.h[0] = 0x6a09e667;
+	out.h[1] = 0xbb67ae85;
+	out.h[2] = 0x3c6ef372;
+	out.h[3] = 0xa54ff53a;
+	out.h[4] = 0x510e527f;
+	out.h[5] = 0x9b05688c;
+	out.h[6] = 0x1f83d9ab;
+	out.h[7] = 0x5be0cd19;
 
 	out.string = NULL;
 
@@ -158,14 +138,14 @@ static lnc_hash_t digest(const uint8_t *in, const size_t size, int *status) {
 			W[j] = W[j - 16] + s0 + W[j - 7] + s1;
 		}
 
-		a = state.h0;
-		b = state.h1;
-		c = state.h2;
-		d = state.h3;
-		e = state.h4;
-		f = state.h5;
-		g = state.h6;
-		h = state.h7;
+		a = state.h[0];
+		b = state.h[1];
+		c = state.h[2];
+		d = state.h[3];
+		e = state.h[4];
+		f = state.h[5];
+		g = state.h[6];
+		h = state.h[7];
 
 		for(j = 0; j < 64; j++) {
 			s0 = rotr(a, 2) ^ rotr(a, 13) ^ rotr(a, 22);
@@ -184,14 +164,14 @@ static lnc_hash_t digest(const uint8_t *in, const size_t size, int *status) {
 			b = a;
 			a = t1 + t2;
 		}
-		state.h0 += a;
-		state.h1 += b;
-		state.h2 += c;
-		state.h3 += d;
-		state.h4 += e;
-		state.h5 += f;
-		state.h6 += g;
-		state.h7 += h;
+		state.h[0] += a;
+		state.h[1] += b;
+		state.h[2] += c;
+		state.h[3] += d;
+		state.h[4] += e;
+		state.h[5] += f;
+		state.h[6] += g;
+		state.h[7] += h;
 	}
 
 	state.string = statetochar(state, status);
@@ -213,6 +193,7 @@ lnc_hash_t lnc_sha256(const uint8_t *in, const size_t insize, int *status) {
 
 void lnc_sha256_free(void *in) {
 	lnc_hash_t *ctx = in;
+	free(ctx->h);
 	free(ctx->string);
 }
 

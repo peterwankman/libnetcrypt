@@ -1,0 +1,25 @@
+General
+	- Consistent identifiers, types and qualifiers
+	- Documentation
+	
+Features
+	- Block cipher modes of operation
+	- Choice of asymmetric ciphers
+	- Authentication (Encrypt, then MAC)
+	- ECC
+	- Perfect forward secrecy
+	- Renegotiate key
+	- Flexible algorithm negotiation
+	- Choice of block- and key size
+	- New key file format
+	- Asynchronous I/O
+	- Graphical Randart
+	
+Block Ciphers
+	- Serpent
+	- Twofish
+	- Patriotic options (DES, MAGENTA, ROT13, ...)
+	
+Hashes
+	- SHA-3
+	- Patriotic options (MD5, SHA-0, ...)

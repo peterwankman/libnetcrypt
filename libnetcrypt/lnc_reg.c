@@ -112,8 +112,10 @@ int lnc_reg_builtin(void) {
 #ifdef WITH_CAST6
 	if((status = lnc_reg_sym_alg(lnc_sym_cast6)) != LNC_OK) return status;
 #endif
+#ifdef WITH_MD5
+	if((status = lnc_reg_hash_alg(lnc_hash_md5)) != LNC_OK) return status;
+#endif
 #ifdef WITH_SHA256
-	if((status = lnc_reg_hash_alg(lnc_hash_sha256)) != LNC_OK) return status;
 	if((status = lnc_reg_hash_alg(lnc_hash_sha256)) != LNC_OK) return status;
 #endif
 

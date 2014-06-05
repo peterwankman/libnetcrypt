@@ -41,13 +41,13 @@ typedef enum { type_boolean, type_integer, type_text } value_type_t;
 uint32_t lnc_conv_endian(uint32_t n);
 size_t lnc_mksalt(char **saltout, size_t *slen);
 uint8_t *lnc_hex2char(const char *in, size_t len);
-int lnc_salt_hash(const char *in, const size_t len, const uint8_t *salthex, char **hashout, int *status);
 int lnc_fill_random(unsigned char *dst, int len, void *dat);
 void lnc_key_to_file(lnc_key_t *key, char *filename, int *status);
-lnc_key_t *lnc_key_from_file(char *filename, int *status);
+lnc_key_t *lnc_key_from_file(const char *filename, int *status);
 void lnc_xor_block(uint8_t *b1, const uint8_t *b2, const uint32_t len);
 uint8_t *lnc_pad(const uint8_t *data, const uint32_t bsize, const uint32_t inlen, uint32_t *newlen);
 char *get_line(FILE *fp);
 void lnc_key_to_file_new(lnc_key_t *key, char *filename, int *status);
+lnc_key_t *lnc_key_from_file_new(const char *filename, int *status);
 
 #endif

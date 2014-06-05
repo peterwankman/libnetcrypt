@@ -172,8 +172,6 @@ static void derive_key(lnc_sock_t *socket, const uint8_t *input, const size_t in
 	uint32_t infoksize = lnc_conv_endian((uint32_t)sdef->ksize);
 	uint32_t infobsize = lnc_conv_endian((uint32_t)sdef->bsize);
 
-	int i;
-
 	info = malloc(
 		sizeof(infoprotver) +
 		sizeof(infohid) +
@@ -209,7 +207,7 @@ static void derive_key(lnc_sock_t *socket, const uint8_t *input, const size_t in
 	memcpy(info + offs, hdef->name, strlen(hdef->name));	offs += strlen(hdef->name);
 	memcpy(info + offs, sdef->name, strlen(sdef->name));	offs += strlen(sdef->name);
 
-	okm = lnc_hkdf_expand(*hdef, prk, hdef->outsize, info, 0, ksize, status);
+	okm = lnc_hkdf_expand(*hdef, prk, hdef->outsize, info, offs, ksize, status);
 	free(prk);
 	free(info);
 

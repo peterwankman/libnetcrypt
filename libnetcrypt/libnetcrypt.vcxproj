@@ -28,6 +28,7 @@
     <ClInclude Include="lnc_cast6_tables.h" />
     <ClInclude Include="lnc_dh.h" />
     <ClInclude Include="lnc_macros.h" />
+    <ClInclude Include="lnc_md5.h" />
     <ClInclude Include="lnc_reg.h" />
     <ClInclude Include="lnc_rndart.h" />
     <ClInclude Include="lnc_error.h" />
@@ -44,6 +45,7 @@
     <ClCompile Include="lnc_cast6.c" />
     <ClCompile Include="lnc_dh.c" />
     <ClCompile Include="lnc_hmac.c" />
+    <ClCompile Include="lnc_md5.c" />
     <ClCompile Include="lnc_reg.c" />
     <ClCompile Include="lnc_rndart.c" />
     <ClCompile Include="lnc_error.c" />
@@ -126,7 +128,7 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;WITH_AES;WITH_CAST6;WITH_DH;WITH_SHA256;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;WITH_AES;WITH_CAST6;WITH_DH;WITH_MD5;WITH_SHA256;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -139,7 +141,7 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;WITH_AES;WITH_CAST6;WITH_DH;WITH_SHA256;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;WITH_AES;WITH_CAST6;WITH_DH;WITH_MD5;WITH_SHA256;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -154,7 +156,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;WITH_AES;WITH_CAST6;WITH_DH;WITH_SHA256;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;WITH_AES;WITH_CAST6;WITH_DH;WITH_MD5;WITH_SHA256;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -171,7 +173,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;WITH_AES;WITH_CAST6;WITH_DH;WITH_SHA256;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;WITH_AES;WITH_CAST6;WITH_DH;WITH_MD5;WITH_SHA256;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

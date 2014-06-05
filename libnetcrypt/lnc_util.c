@@ -119,49 +119,6 @@ uint8_t *lnc_hex2char(const char *in, size_t len) {
 	return out;
 }
 
-int lnc_salt_hash(const char *in, const size_t len, const uint8_t *salthex, char **hashout, int *status) {
-	lnc_hash_t hash;	
-	uint8_t *buf, *salt;
-	size_t slen = strlen(salthex) / 2;
-	size_t i;
-
-	if((buf = malloc(slen + len)) == NULL) {
-		fprintf(stderr, "ERROR (util.c/lnc_salt_hash): malloc(slen + len) failed.\n");
-		*status = LNC_ERR_MALLOC;
-		return 0;
-	}
-
-	if((salt = lnc_hex2char(salthex, strlen(salthex))) == NULL) {
-		fprintf(stderr, "ERROR (util.c/lnc_salt_hash): lnc_hex2char(%s) failed.\n", salthex);
-		free(buf);
-		*status = LNC_ERR_MALLOC;
-		return 0;
-	}
-		
-	for(i = 0; i < slen; i++)
-		buf[i] = salt[i];
-	free(salt);
-
-	for(i = slen; i < slen + len; i++)
-		buf[i] = in[i - slen];
-
-	hash = lnc_sha256(buf, len + slen, status);
-	free(buf);
-
-	if(*status != LNC_OK)
-		return 0;
-
-	if((*hashout = malloc(65)) == NULL) {
-		fprintf(stderr, "ERROR (util.c/lnc_salt_hash): malloc(hash) failed.\n");		
-		*status = LNC_ERR_MALLOC;
-		return 0;
-	}	
-	sprintf(*hashout, "%08x%08x%08x%08x%08x%08x%08x%08x", hash.h0, hash.h1, hash.h2, hash.h3, hash.h4, hash.h5, hash.h6, hash.h7);
-
-	free(hash.string);
-	return 256;
-}
-
 int lnc_fill_random(unsigned char *dst, int len, void *dat) { 
 	int ret = len;
 #ifdef _MSC_VER
@@ -257,7 +214,7 @@ static int mp_from_file(mp_int *i, FILE *fp) {
 	return ret;
 }
 
-lnc_key_t *lnc_key_from_file(char *filename, int *status) {
+lnc_key_t *lnc_key_from_file(const char *filename, int *status) {
 	FILE *fp = fopen(filename, "r");
 	lnc_key_t *out;
 	mp_int root, modulus, secret_key, public_key, test;
@@ -520,4 +477,54 @@ void lnc_key_to_file_new(lnc_key_t *key, char *filename, int *status) {
 err:
 	fclose(fp);
 	*status = ret;
+}
+
+lnc_key_t *lnc_key_from_file_new(const char *filename, int *status) {
+	FILE *fp = fopen(filename, "r");
+	lnc_key_t *out;
+	char *buf, *data;
+	size_t datalen = 0;
+
+	if(fp == NULL) {
+		*status = LNC_ERR_OPEN;
+		return NULL;
+	}
+
+	if((out = malloc(sizeof(lnc_key_t))) == NULL) {
+		*status = LNC_ERR_MALLOC;
+		fclose(fp);
+		return NULL;
+	}
+
+	buf = NULL;
+	do {
+		free(buf);
+		buf = get_line(fp);
+	} while(!feof(fp) && strncmp(buf, "-----BEGIN LNC SECRET KEY BLOCK-----", 36));
+
+	data = NULL;
+	do {
+		free(buf);
+		buf = get_line(fp);
+		datalen += strlen(buf);
+		data = realloc(data, datalen + 1);
+		memcpy(data + datalen - strlen(buf), buf, strlen(buf) + 1);
+	} while (!feof(fp) && strncmp(buf, "-----END LNC SECRET KEY BLOCK-----", 34));
+
+	if(feof(fp)) {
+		*status = LNC_ERR_VAL;
+		fclose(fp);
+		free(buf);
+		free(data);
+	}
+
+	data[datalen - 34] = '\0';
+
+	printf("%s\n", data);
+	free(data);
+	free(buf);
+
+	*status = LNC_OK;
+
+	return out;
 }

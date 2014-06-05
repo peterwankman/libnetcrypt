@@ -31,7 +31,7 @@
 
 typedef struct hash {
 	uint32_t size;
-	uint32_t h0, h1, h2, h3, h4, h5, h6, h7;
+	uint32_t *h;
 	unsigned char *string;
 } lnc_hash_t;
 
