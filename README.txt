@@ -53,8 +53,9 @@ server and be displayed to the user for visual confirmation, if he is expected
 to have the necessary expertise to know what that means and actually care if 
 the randart ever looks unfamiliar.
 
-AES, CAST6, SHA256
+AES, CAST6, SHA256, MD5
 
 The implementations of these algorithms were only tested for giving correct
 results. They are not designed to resist any attacks not directed at the
-algorithms themselves.
+algorithms themselves. To be extra sure, MD5 is included to show your support
+for the troops and intelligence agencies worldwide.
