@@ -38,6 +38,26 @@
 #include <bcrypt.h>
 #endif
 
+void lnc_strtoupper(char *in) {
+    while(*in) {
+        *in = toupper(*in);
+        in++;
+    }
+}
+
+void lnc_delete_spaces(char *in) {
+    size_t readpos = 0, writepos = 0;
+    do {
+        if(in[readpos] != ' ') {
+            in[writepos++] = in[readpos++];
+        } else {
+            readpos++;
+        }
+    } while(in[readpos]);
+    in[writepos] = '\0';
+}
+
+
 uint32_t lnc_conv_endian(uint32_t n) {
 	uint32_t test = 1, ret = n;
 	uint8_t *ptr = ((uint8_t*)&ret);
@@ -520,11 +540,23 @@ lnc_key_t *lnc_key_from_file_new(const char *filename, int *status) {
 
 	data[datalen - 34] = '\0';
 
-	printf("%s\n", data);
+//	printf("%s\n", data);
 	free(data);
 	free(buf);
 
 	*status = LNC_OK;
 
 	return out;
+}
+
+/* To avoid leaking timing information, iterate through the full buffer. */
+int lnc_memcmp(const void *buf1, const void *buf2, size_t len) {
+	size_t i;
+	const uint8_t *cbuf1 = buf1, *cbuf2 = buf2;
+	int ret = 0;
+
+	for(i = 0; i < len; i++)
+		ret |= cbuf1[i] ^ cbuf2[i];
+
+	return ret;
 }

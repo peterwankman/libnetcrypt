@@ -24,7 +24,14 @@
 #ifndef LNC_H_
 #define LNC_H_
 
+#ifdef WITH_AUTH
+#ifndef WITH_SHA1
+#define WITH_SHA1
+#endif
+#endif
+
 #ifdef U_S_A_U_S_A_U_S_A
+#define WITH_DES
 #define WITH_MD5
 #endif
 
@@ -45,7 +52,10 @@
 
 #include "lnc_typedefs.h"
 #include "lnc_aes.h"
+#include "lnc_auth.h"
+#include "lnc_base32.h"
 #include "lnc_cast6.h"
+#include "lnc_des.h"
 #include "lnc_dh.h"
 #include "lnc_error.h"
 #include "lnc_hmac.h"
@@ -53,6 +63,7 @@
 #include "lnc_proto.h"
 #include "lnc_reg.h"
 #include "lnc_rndart.h"
+#include "lnc_sha1.h"
 #include "lnc_sha256.h"
 #include "lnc_util.h"
 

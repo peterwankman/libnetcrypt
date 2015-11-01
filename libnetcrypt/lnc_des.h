@@ -21,20 +21,14 @@
  * 
  */
 
+#ifdef WITH_DES
+#ifndef LNC_DES_H_
+#define LNC_DES_H_
 
-#ifdef WITH_MD5
-#ifndef LNC_MD5_H_
-#define LNC_MD5_H_
+uint8_t *lnc_des_enc_block(uint8_t *msg, uint8_t *key, int *status);
+// void destest(void);
 
-#include "lnc.h"
-#include "lnc_macros.h"
-
-void lnc_md5_free(void *in);
-lnc_hash_t lnc_md5(const uint8_t *in, const size_t insize, int *status);
-
-void md5test(void);
-
-LNC_DEFINE_HASH(lnc_hash_md5, "MD5", 0x229ca98b, 16, 64, lnc_md5, lnc_md5_free);
+LNC_DEFINE_SYM(lnc_sym_des, "DES", 0x90d6d677, 8, 7, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
 
 #endif
 #endif

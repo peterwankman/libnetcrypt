@@ -22,6 +22,7 @@
  */
 
 #include "lnc.h"
+#include "../shared/mem.h"
 
 static int shifttbl[64] = {
 	7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 

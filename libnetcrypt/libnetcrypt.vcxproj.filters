@@ -25,6 +25,9 @@
     <Filter Include="Source Files\modes">
       <UniqueIdentifier>{fd2a462a-e49d-44d1-82e0-6f8d9df8a773}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\auth">
+      <UniqueIdentifier>{6d08afd9-9752-4848-86b3-4ef76d5e251c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="lnc.h">
@@ -78,6 +81,21 @@
     <ClInclude Include="lnc_md5.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="lnc_des.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lnc_des_tables.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lnc_sha1.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lnc_base32.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lnc_auth.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="lnc_error.c">
@@ -124,6 +142,18 @@
     </ClCompile>
     <ClCompile Include="lnc_md5.c">
       <Filter>Source Files\hash</Filter>
+    </ClCompile>
+    <ClCompile Include="lnc_des.c">
+      <Filter>Source Files\symmetric</Filter>
+    </ClCompile>
+    <ClCompile Include="lnc_sha1.c">
+      <Filter>Source Files\hash</Filter>
+    </ClCompile>
+    <ClCompile Include="lnc_base32.c">
+      <Filter>Source Files\auth</Filter>
+    </ClCompile>
+    <ClCompile Include="lnc_auth.c">
+      <Filter>Source Files\auth</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

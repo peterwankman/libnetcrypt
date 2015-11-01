@@ -32,7 +32,7 @@
 #define KEYSIZE 4096
 #define TESTMSG	"libnetcrypt test message"
 
-void server(u_short port, lnc_key_t *key) {
+void server(u_short port, lnc_key_t *key, const int infloop) {
 	lnc_sock_t *listsock, *accsock;
 	int status, nclient = 0;
 	uint8_t *rndart;
@@ -44,11 +44,10 @@ void server(u_short port, lnc_key_t *key) {
 	} else
 		printf("OK.\n");
 
-	while(nclient < 3) {
+	while(infloop || nclient < 3) {
 		if((accsock = lnc_accept(listsock, key, &status)) == NULL) {
-			lnc_freesock(listsock);
 			lnc_perror(status, "ERROR (libnetcrypt)");
-			return;
+			continue;
 		}
 		printf("Got client %d!\n", ++nclient);
 
@@ -153,16 +152,19 @@ lnc_key_t *new_key(int size, char *filename) {
 }
 
 int main(int argc, char **argv) {
-	int c, listen = 0, status, keysize = KEYSIZE;
+	int c, infloop = 0, listen = 0, status, keysize = KEYSIZE;
 	u_short portnum = 0;
 	char *remote_addr = NULL, *keyfile = NULL;
 	lnc_key_t *key;
+
+	uint32_t token;
 	
 	uint8_t *hmac;
 
-	while((c = getopt(argc, argv, "c:k:lp:s:")) != -1) {
+	while((c = getopt(argc, argv, "c:ik:lp:s:")) != -1) {
 		switch(c) {
 			case 'c': remote_addr = optarg;	break;
+			case 'i': infloop = 1; break;
 			case 'k':
 				keyfile = optarg; break;
 			case 'l':
@@ -216,11 +218,19 @@ int main(int argc, char **argv) {
 	if(status != LNC_OK)
 		lnc_perror(status, "KTF");
 	/* ************************ */
+
+	token = lnc_gen_auth("4HGN 5Y5Z HM5A RHA2 GRBD D3SL RVNP 4VMS", &status);
+	printf("Token: %06d... ", token);
+	if(lnc_check_auth("4HGN 5Y5Z HM5A RHA2 GRBD D3SL RVNP 4VMS", token, &status) == LNC_OK)
+		printf("OK!\n");
+	else
+		printf("Failed.\n");
+
 	
 	if(remote_addr)
 		client(remote_addr, portnum, key);
 	else if(listen)
-		server(portnum, key);
+		server(portnum, key, infloop);
 	else {
 		fprintf(stderr, "ERROR: The developer is an idiot.\n");
 		return EXIT_FAILURE;

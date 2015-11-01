@@ -21,20 +21,17 @@
  * 
  */
 
-
-#ifdef WITH_MD5
-#ifndef LNC_MD5_H_
-#define LNC_MD5_H_
+#ifdef WITH_SHA1
+#ifndef LNC_SHA1_H_
+#define LNC_SHA1_H_
 
 #include "lnc.h"
 #include "lnc_macros.h"
 
-void lnc_md5_free(void *in);
-lnc_hash_t lnc_md5(const uint8_t *in, const size_t insize, int *status);
+void lnc_sha1_free(void *in);
+lnc_hash_t lnc_sha1(const uint8_t *in, const size_t insize, int *status);
 
-void md5test(void);
+LNC_DEFINE_HASH( lnc_hash_sha1, "SHA1", 0xd4e90fd2, 20, 64, lnc_sha1, lnc_sha1_free);
 
-LNC_DEFINE_HASH(lnc_hash_md5, "MD5", 0x229ca98b, 16, 64, lnc_md5, lnc_md5_free);
-
-#endif
+#endif 
 #endif

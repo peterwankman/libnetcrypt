@@ -21,20 +21,12 @@
  * 
  */
 
+#ifndef LNC_BASE32_H_
+#define LNC_BASE32_H_
 
-#ifdef WITH_MD5
-#ifndef LNC_MD5_H_
-#define LNC_MD5_H_
+#include <stdint.h>
 
-#include "lnc.h"
-#include "lnc_macros.h"
+int lnc_b32_enc(const uint8_t *in, const size_t insize, uint8_t **out);
+int lnc_b32_dec(const uint8_t *in, uint8_t **out, size_t *outsize);
 
-void lnc_md5_free(void *in);
-lnc_hash_t lnc_md5(const uint8_t *in, const size_t insize, int *status);
-
-void md5test(void);
-
-LNC_DEFINE_HASH(lnc_hash_md5, "MD5", 0x229ca98b, 16, 64, lnc_md5, lnc_md5_free);
-
-#endif
 #endif

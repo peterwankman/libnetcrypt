@@ -399,6 +399,12 @@ int lnc_send(lnc_sock_t *socket, const uint8_t *data, const uint32_t len) {
 	void *context;
 	int status;
 
+	/* HMAC EXTENSION */
+	lnc_hmac_ctx_t *hmac_ctx;
+	uint8_t *hmac;
+	int i;
+	/* ************** */
+
 	if((IV = malloc(bsize)) == NULL)
 		return 0;
 
@@ -407,10 +413,18 @@ int lnc_send(lnc_sock_t *socket, const uint8_t *data, const uint32_t len) {
 	if((buf = padded = lnc_pad(data, bsize, len, &padlen)) == NULL)
 		return 0;
 
+	hmac_ctx = lnc_hmac_init(*socket->hashdef, socket->sym_key, socket->sym_key_size, &status);
+	if(status != LNC_OK)
+		printf("HMAC INIT ERROR!\n");
+
 	nblocks = padlen / bsize + 1;
 	sendblocks = lnc_conv_endian(nblocks);
 	send(socket->s, (char*)&sendblocks, sizeof(sendblocks), 0);
-	send(socket->s, IV, bsize, 0);	
+	send(socket->s, IV, bsize, 0);
+
+	lnc_hmac_update(hmac_ctx, IV, bsize, &status);
+	if(status != LNC_OK)
+		printf("HMAC UPDATE ERROR! (IV)\n");
 	
 	do {
 		lnc_xor_block(buf, IV, bsize);
@@ -431,6 +445,9 @@ int lnc_send(lnc_sock_t *socket, const uint8_t *data, const uint32_t len) {
 			free(padded);
 			return 0;
 		}
+		lnc_hmac_update(hmac_ctx, encblock, bsize, &status);
+		if(status != LNC_OK)
+			printf("HMAC UPDATE ERROR! (%d)\n", currblock);
 
 		symdef->clear(context);
 		memcpy(IV, encblock, bsize);
@@ -441,6 +458,19 @@ int lnc_send(lnc_sock_t *socket, const uint8_t *data, const uint32_t len) {
 	} while(currblock < nblocks);
 	free(padded);
 	free(IV);
+
+	hmac = lnc_hmac_finalize(hmac_ctx, &status);
+	if(status != LNC_OK)
+		printf("HMAC FINAL ERROR!\n");
+
+	if(send(socket->s, hmac, socket->hashdef->outsize, 0) != socket->hashdef->outsize)
+		printf("HMAC SEND ERROR!\n");
+
+	printf("HMAC_SEND: ");
+	for(i = 0; i < socket->hashdef->outsize; i++)
+		printf("%02x", hmac[i]);
+	printf("\n");
+	free(hmac);
 
 	return nblocks;
 }
@@ -454,6 +484,13 @@ int lnc_recv(lnc_sock_t *socket, uint8_t **dst) {
 	void *context;
 	int status;
 
+	/* HMAC EXTENSION */
+	lnc_hmac_ctx_t *hmac_ctx;
+	uint8_t *hmac_calc, *hmac_recv;
+	uint8_t *encblock, *fullpacket = NULL;
+	size_t i, insize = 0;
+	/* ************** */
+
 	if((IV = malloc(bsize)) == NULL)
 		return 0;
 
@@ -466,17 +503,62 @@ int lnc_recv(lnc_sock_t *socket, uint8_t **dst) {
 	if(recvlen < 2)
 		goto freecurr;
 
-	if((dstbuf = malloc(recvlen * (bsize - 1))) == NULL)
+	if((dstbuf = malloc(bsize * recvlen)) == NULL)
 		goto freecurr;
 
 	if(recv(socket->s, IV, bsize, 0) != bsize)
 		goto freedst;
 
+	hmac_ctx = lnc_hmac_init(*socket->hashdef, socket->sym_key, socket->sym_key_size, &status);
+	if(status != LNC_OK)
+		printf("HMAC INIT ERROR!\n");
+	lnc_hmac_update(hmac_ctx, IV, bsize, &status);
+	if(status != LNC_OK)
+			printf("HMAC UPDATE ERROR! (%d)\n", currblock);
+
 	do {
 		if((ret = recv(socket->s, currblock, bsize, 0)) != bsize)
 			goto freedst;
 
-		context = symdef->init(currblock, socket->sym_key, &status);
+		if((fullpacket = realloc(fullpacket, insize + bsize)) == NULL)
+			goto freedst;
+
+		memcpy(fullpacket + insize, currblock, bsize);
+		insize += bsize;
+
+		lnc_hmac_update(hmac_ctx, currblock, bsize, &status);
+		if(status != LNC_OK)
+			printf("HMAC UPDATE ERROR! (%d)\n", currblock);
+
+		blockcnt++;
+	} while(blockcnt < recvlen);
+	
+	hmac_recv = malloc(socket->hashdef->outsize);
+	if(recv(socket->s, hmac_recv, socket->hashdef->outsize, 0) != socket->hashdef->outsize)
+		printf("HMAC RECV ERROR!\n");
+	printf("RECVMAC: ");
+	for(i = 0; i < socket->hashdef->outsize; i++)
+		printf("%02x", hmac_recv[i]);
+	printf("\n");
+	
+	hmac_calc = lnc_hmac_finalize(hmac_ctx, &status);
+	if(status != LNC_OK)
+		printf("HMAC FINAL ERROR!\n");
+
+	printf("CALCMAC: ");
+	for(i = 0; i < socket->hashdef->outsize; i++)
+		printf("%02x", hmac_calc[i]);
+	printf("\n");
+	
+	if(lnc_memcmp(hmac_recv, hmac_calc, socket->hashdef->outsize))
+		printf("MAC MISMATCH!\n");
+
+	free(hmac_calc);
+	free(hmac_recv);
+
+	for(i = 0; i < blockcnt; i++) {
+		encblock = fullpacket + i * bsize;
+		context = symdef->init(encblock, socket->sym_key, &status);
 		if(status != LNC_OK)
 			goto freedst;
 
@@ -489,17 +571,17 @@ int lnc_recv(lnc_sock_t *socket, uint8_t **dst) {
 
 		lnc_xor_block(decblock, socket->cookie, bsize);
 		lnc_xor_block(decblock, IV, bsize);
-		memcpy(dstbuf + (blockcnt - 1) * bsize, decblock, bsize);
-		memcpy(IV, currblock, bsize);
+		memcpy(dstbuf + i * bsize, decblock, bsize);
+		memcpy(IV, encblock, bsize);
 
 		free(decblock);	
-		blockcnt++;
-	} while(blockcnt < recvlen);
+	}
+	free(fullpacket);
 
-	ret = get_real_len(dstbuf, (blockcnt - 1) * bsize);
+	ret = get_real_len(dstbuf, (recvlen - 1) * bsize);
 
 	if(ret) {
-		if((*dst = malloc(ret)) != NULL) {
+		if((*dst = malloc(ret + 1)) != NULL) {
 			memcpy(*dst, dstbuf, ret);
 		} else {
 			ret = 0;

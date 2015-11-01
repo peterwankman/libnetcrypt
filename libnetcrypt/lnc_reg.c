@@ -28,6 +28,9 @@
 #include "lnc_reg.h"
 
 #ifdef WITH_SHA256
+#include "lnc_sha1.h"
+#endif
+#ifdef WITH_SHA256
 #include "lnc_sha256.h"
 #endif
 
@@ -57,8 +60,6 @@ int lnc_reg_sym_alg(const lnc_symdef_t def) {
 		newblock = malloc((lnc_alloc_sym_algs + PREALLOC_BLOCK) * sizeof(lnc_symdef_t));
 		if(!newblock)
 			return LNC_ERR_MALLOC;
-
-		printf("%08x\n", newblock);
 
 		memcpy(newblock, lnc_sym_algs, lnc_num_sym_algs * sizeof(lnc_symdef_t));
 		free(lnc_sym_algs);
@@ -112,8 +113,14 @@ int lnc_reg_builtin(void) {
 #ifdef WITH_CAST6
 	if((status = lnc_reg_sym_alg(lnc_sym_cast6)) != LNC_OK) return status;
 #endif
+#ifdef WITH_DES
+	if((status = lnc_reg_sym_alg(lnc_sym_des)) != LNC_OK) return status;
+#endif
 #ifdef WITH_MD5
 	if((status = lnc_reg_hash_alg(lnc_hash_md5)) != LNC_OK) return status;
+#endif
+#ifdef WITH_SHA1
+	if((status = lnc_reg_hash_alg(lnc_hash_sha1)) != LNC_OK) return status;
 #endif
 #ifdef WITH_SHA256
 	if((status = lnc_reg_hash_alg(lnc_hash_sha256)) != LNC_OK) return status;

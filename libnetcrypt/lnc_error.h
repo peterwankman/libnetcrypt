@@ -24,7 +24,7 @@
 #ifndef LNC_ERROR_H_
 #define LNC_ERROR_H_
 
-#define LNC_OK 0
+#define LNC_OK			0
 #define LNC_ERR_INIT	1
 #define LNC_ERR_ADDR	2
 #define LNC_ERR_SOCKET	3
